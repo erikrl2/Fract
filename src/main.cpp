@@ -94,6 +94,14 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
         zoom *= 1.2f;
 }
 
+static bool fractToggle = false;
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+        fractToggle = !fractToggle;
+}
+
 int main(int argc, char* argv[])
 {
     GLFWwindow* window;
@@ -117,6 +125,7 @@ int main(int argc, char* argv[])
     glfwSetWindowSizeLimits(window, 200, 100, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
     glfwSetScrollCallback(window, scroll_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
 
     glfwMakeContextCurrent(window);
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
@@ -148,6 +157,7 @@ int main(int argc, char* argv[])
     GLint startLocation = glGetUniformLocation(program, "start");
     GLint resLocation = glGetUniformLocation(program, "res");
     GLint nLocation = glGetUniformLocation(program, "n");
+    GLint mandelbLocation = glGetUniformLocation(program, "mandelb");
 
     while (!glfwWindowShouldClose(window))
     {
@@ -200,6 +210,7 @@ int main(int argc, char* argv[])
         glUniform2fv(startLocation, 1, start);
         glUniform1f(resLocation, res);
         glUniform1ui(nLocation, n);
+        glUniform1i(mandelbLocation, fractToggle);
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
