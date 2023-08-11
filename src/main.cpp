@@ -111,8 +111,6 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
         zoom /= 1.2f;
     else if (yoffset < 0)
         zoom *= 1.2f;
-
-    printf("zoom=%f\n", zoom);
 }
 
 int main(int argc, char* argv[])
@@ -134,6 +132,8 @@ int main(int argc, char* argv[])
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
+
+    glfwSetWindowSizeLimits(window, 200, 100, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
     glfwSetKeyCallback(window, key_callback);
     glfwSetScrollCallback(window, scroll_callback);
@@ -173,8 +173,6 @@ int main(int argc, char* argv[])
 
     while (!glfwWindowShouldClose(window))
     {
-        glfwPollEvents();
-
         showFPS(window);
 
         int width, height;
@@ -212,8 +210,7 @@ int main(int argc, char* argv[])
         vec2_add(start, start, offset);
 
         float f = std::log10(1 / zoom) / 6.0f;
-        uint32_t n = 50 + uint32_t(f * 1000);
-        printf("zoom=%f, f=%f, n=%d\n", zoom, f, n);
+        uint32_t n = 50 + uint32_t(std::clamp(f, 0.0f, 1.0f) * 1000);
 
         glViewport(0, 0, width, height);
 
@@ -228,6 +225,8 @@ int main(int argc, char* argv[])
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
         glfwSwapBuffers(window);
+
+        glfwPollEvents();
     }
 
     glfwDestroyWindow(window);
