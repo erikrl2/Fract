@@ -3,7 +3,6 @@ workspace "Fract"
 	startproject "Fract"
 
 	configurations { "Debug", "Release" }
-
 	outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 	project "Fract"
@@ -25,7 +24,8 @@ workspace "Fract"
 		{
 			"src",
 			"vendor/GLFW/include",
-			"vendor/Glad/include"
+			"vendor/Glad/include",
+			"vendor/linmath.h/include"
 		}
 
 		libdirs

@@ -16,7 +16,7 @@ ifeq ($(config),debug)
   TARGET = $(TARGETDIR)/Fract
   OBJDIR = bin-int/Debug-linux-x86_64/Fract
   DEFINES += -DDEBUG
-  INCLUDES += -Isrc -Ivendor/GLFW/include -Ivendor/Glad/include
+  INCLUDES += -Isrc -Ivendor/GLFW/include -Ivendor/Glad/include -Ivendor/linmath.h/include
   FORCE_INCLUDE +=
   ALL_CPPFLAGS += $(CPPFLAGS) -MD -MP $(DEFINES) $(INCLUDES)
   ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -g
@@ -43,7 +43,7 @@ ifeq ($(config),release)
   TARGET = $(TARGETDIR)/Fract
   OBJDIR = bin-int/Release-linux-x86_64/Fract
   DEFINES += -DNDEBUG
-  INCLUDES += -Isrc -Ivendor/GLFW/include -Ivendor/Glad/include
+  INCLUDES += -Isrc -Ivendor/GLFW/include -Ivendor/Glad/include -Ivendor/linmath.h/include
   FORCE_INCLUDE +=
   ALL_CPPFLAGS += $(CPPFLAGS) -MD -MP $(DEFINES) $(INCLUDES)
   ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -O2

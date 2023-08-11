@@ -1,7 +1,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
-#include "linmath.h" // TODO: Move to vendor
+#include <linmath.h>
 
 #include <string>
 #include <sstream>
@@ -10,24 +9,14 @@
 #include <algorithm>
 #include <iostream>
 
+#include "shaders.h"
+
 #define APP_NAME "Fract"
 
-static GLuint createShader(GLenum type, const std::string& file)
+static GLuint createShader(GLenum type, const char* shaderSrc)
 {
-    std::ifstream fs(file);
-    std::stringstream ss;
-
-    if(!fs.is_open())
-        throw std::runtime_error("Could not find the file " + file);
-
-    ss << fs.rdbuf();
-    fs.close();
-
-    std::string string = ss.str();
-    const char* cString = string.c_str();
-
     GLuint shader = glCreateShader(type);
-    glShaderSource(shader, 1, &cString, NULL);
+    glShaderSource(shader, 1, &shaderSrc, NULL);
     glCompileShader(shader);
 
     GLint status = 0;
@@ -50,8 +39,8 @@ static GLuint createShader(GLenum type, const std::string& file)
 static GLuint createProgram()
 {
     std::vector<GLuint> shaders;
-    shaders.push_back(createShader(GL_VERTEX_SHADER, "src/fract.vert"));
-    shaders.push_back(createShader(GL_FRAGMENT_SHADER, "src/fract.frag"));
+    shaders.push_back(createShader(GL_VERTEX_SHADER, vertexShaderSrc.c_str()));
+    shaders.push_back(createShader(GL_FRAGMENT_SHADER, fragmentShaderSrc.c_str()));
 
     GLuint program = glCreateProgram();
 
@@ -68,39 +57,31 @@ static GLuint createProgram()
     return program;
 }
 
-static void showFPS(GLFWwindow *pWindow)
+static void showFPS(GLFWwindow *window)
 {
     static double lastTime = 0.0;
     static size_t nbFrames = 0;
 
-     double currentTime = glfwGetTime();
-     double delta = currentTime - lastTime;
-     nbFrames++;
-     if ( delta >= 1.0 )
-     {
-         std::cout << 1000.0 / double(nbFrames) << "ms" << std::endl;
+    double currentTime = glfwGetTime();
+    double delta = currentTime - lastTime;
+    nbFrames++;
+    if (delta >= 1.0)
+    {
+        double fps = double(nbFrames) / delta;
 
-         double fps = double(nbFrames) / delta;
+        std::stringstream ss;
+        ss << APP_NAME << " [" << fps << " FPS]";
 
-         std::stringstream ss;
-         ss << APP_NAME << " [" << fps << " FPS]";
+        glfwSetWindowTitle(window, ss.str().c_str());
 
-         glfwSetWindowTitle(pWindow, ss.str().c_str());
-
-         nbFrames = 0;
-         lastTime = currentTime;
-     }
+        nbFrames = 0;
+        lastTime = currentTime;
+    }
 }
 
 static void error_callback(int error, const char* description)
 {
     fprintf(stderr, "Error: %s\n", description);
-}
-
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GLFW_TRUE); // TODO: Check why this does not work
 }
 
 static float zoom = 1.0f;
@@ -126,7 +107,7 @@ int main(int argc, char* argv[])
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
-    window = glfwCreateWindow(640, 480, "Fract", NULL, NULL);
+    window = glfwCreateWindow(640, 480, APP_NAME, NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -135,7 +116,6 @@ int main(int argc, char* argv[])
 
     glfwSetWindowSizeLimits(window, 200, 100, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
-    glfwSetKeyCallback(window, key_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
     glfwMakeContextCurrent(window);
@@ -169,10 +149,10 @@ int main(int argc, char* argv[])
     GLint resLocation = glGetUniformLocation(program, "res");
     GLint nLocation = glGetUniformLocation(program, "n");
 
-    // TODO: Do massive clean up
-
     while (!glfwWindowShouldClose(window))
     {
+        glfwPollEvents();
+
         showFPS(window);
 
         int width, height;
@@ -181,7 +161,6 @@ int main(int argc, char* argv[])
         float baseRes = 2.0f / std::min(width, height);
         float res = baseRes * zoom;
 
-        // TODO: Change back to pixel coords for higher precision
         vec2 start = {-width * 0.5f * res, -height * 0.5f * res};
         static vec2 offset = {0.0f, 0.0f};
         static bool pressed = false;
@@ -225,9 +204,12 @@ int main(int argc, char* argv[])
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
         glfwSwapBuffers(window);
-
-        glfwPollEvents();
     }
+
+    glDeleteBuffers(1, &vb);
+    glDeleteBuffers(1, &ib);
+    glDeleteVertexArrays(1, &va);
+    glDeleteProgram(program);
 
     glfwDestroyWindow(window);
     glfwTerminate();
