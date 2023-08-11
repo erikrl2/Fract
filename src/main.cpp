@@ -57,7 +57,7 @@ static GLuint createProgram()
     return program;
 }
 
-static void showFPS(GLFWwindow *window)
+static void updateWindowTitle(GLFWwindow *window)
 {
     static double lastTime = 0.0;
     static size_t nbFrames = 0;
@@ -79,35 +79,11 @@ static void showFPS(GLFWwindow *window)
     }
 }
 
-static void error_callback(int error, const char* description)
-{
-    fprintf(stderr, "Error: %s\n", description);
-}
-
-static float zoom = 1.0f;
-
-static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    if (yoffset > 0)
-        zoom /= 1.2f;
-    else if (yoffset < 0)
-        zoom *= 1.2f;
-}
-
-static bool fractToggle = false;
-
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-{
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
-        fractToggle = !fractToggle;
-}
-
 int main(int argc, char* argv[])
 {
-    GLFWwindow* window;
-    GLuint va, vb, ib, program;
-
-    glfwSetErrorCallback(error_callback);
+    glfwSetErrorCallback([](int error, const char* description) {
+        fprintf(stderr, "Error: %s\n", description);
+    });
 
     if (!glfwInit())
         exit(EXIT_FAILURE);
@@ -115,7 +91,7 @@ int main(int argc, char* argv[])
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
-    window = glfwCreateWindow(640, 480, APP_NAME, NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(640, 480, APP_NAME, NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -124,12 +100,29 @@ int main(int argc, char* argv[])
 
     glfwSetWindowSizeLimits(window, 200, 100, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
-    glfwSetScrollCallback(window, scroll_callback);
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    static float zoom = 1.0f;
+    static bool fractToggle = false;
+
+    glfwSetScrollCallback(window, [](GLFWwindow* w, double xoffset, double yoffset) {
+        if (yoffset > 0)
+            zoom /= 1.2f;
+        else if (yoffset < 0)
+            zoom *= 1.2f;
+    });
+    glfwSetMouseButtonCallback(window, [](GLFWwindow* w, int button, int action, int mods) {
+        if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+            fractToggle = !fractToggle;
+    });
+    glfwSetKeyCallback(window, [](GLFWwindow* w, int key, int scancode, int action, int mods) {
+        if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+            fractToggle = !fractToggle;
+    });
 
     glfwMakeContextCurrent(window);
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-    glfwSwapInterval(0);
+    glfwSwapInterval(0); // Vsync off
+
+    GLuint program, va, vb, ib;
 
     program = createProgram();
 
@@ -163,18 +156,37 @@ int main(int argc, char* argv[])
     {
         glfwPollEvents();
 
-        showFPS(window);
+        updateWindowTitle(window);
+
+        static double lastT = 0.0;
+        double t = glfwGetTime();
+        float dt = float(t - lastT);
+        lastT = t;
 
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
 
+        static vec2 startOffset = {0.0f, 0.0f};
+
         float baseRes = 2.0f / std::min(width, height);
         float res = baseRes * zoom;
 
-        vec2 start = {-width * 0.5f * res, -height * 0.5f * res};
-        static vec2 offset = {0.0f, 0.0f};
-        static bool pressed = false;
+        if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+            zoom /= 1.0f + dt;
+        else if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+            zoom *= 1.0f + dt;
 
+        float offset = 500.0f * res * dt;
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            startOffset[1] += offset;
+        else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            startOffset[1] -= offset;
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            startOffset[0] -= offset;
+        else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            startOffset[0] += offset;
+
+        static bool pressed = false;
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
         {
             double xpos, ypos;
@@ -188,7 +200,7 @@ int main(int argc, char* argv[])
                 vec2 delta{};
                 vec2_sub(delta, mousePos, lastMousePos);
                 vec2_scale(delta, delta, res);
-                vec2_sub(offset, offset, delta);
+                vec2_sub(startOffset, startOffset, delta);
             } else
                 pressed = true;
 
@@ -196,7 +208,8 @@ int main(int argc, char* argv[])
         } else
             pressed = false;
 
-        vec2_add(start, start, offset);
+        vec2 start = {-width * 0.5f * res, -height * 0.5f * res};
+        vec2_add(start, start, startOffset);
 
         float f = std::log10(1 / zoom) / 6.0f;
         uint32_t n = 50 + uint32_t(std::clamp(f, 0.0f, 1.0f) * 1000);
