@@ -1,26 +1,16 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "linmath.h"
+#include "linmath.h" // TODO: Move to vendor
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <string>
 #include <sstream>
 #include <fstream>
 #include <vector>
 #include <algorithm>
+#include <iostream>
 
-static const struct
-{
-    float x, y;
-    float r, g, b;
-} vertices[3] =
-{
-    { -0.6f, -0.4f, 1.f, 0.f, 0.f },
-    {  0.6f, -0.4f, 0.f, 1.f, 0.f },
-    {   0.f,  0.6f, 0.f, 0.f, 1.f }
-};
+#define APP_NAME "Fract"
 
 static GLuint createShader(GLenum type, const std::string& file)
 {
@@ -39,6 +29,20 @@ static GLuint createShader(GLenum type, const std::string& file)
     GLuint shader = glCreateShader(type);
     glShaderSource(shader, 1, &cString, NULL);
     glCompileShader(shader);
+
+    GLint status = 0;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+    if (status == GL_FALSE)
+    {
+        GLint length = 0;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
+
+        std::vector<GLchar> infoLog(length);
+        glGetShaderInfoLog(shader, length, &length, &infoLog[0]);
+        glDeleteShader(shader);
+
+        fprintf(stderr, "%s\n", infoLog.data());
+    }
 
     return shader;
 }
@@ -64,6 +68,30 @@ static GLuint createProgram()
     return program;
 }
 
+static void showFPS(GLFWwindow *pWindow)
+{
+    static double lastTime = 0.0;
+    static size_t nbFrames = 0;
+
+     double currentTime = glfwGetTime();
+     double delta = currentTime - lastTime;
+     nbFrames++;
+     if ( delta >= 1.0 )
+     {
+         std::cout << 1000.0 / double(nbFrames) << "ms" << std::endl;
+
+         double fps = double(nbFrames) / delta;
+
+         std::stringstream ss;
+         ss << APP_NAME << " [" << fps << " FPS]";
+
+         glfwSetWindowTitle(pWindow, ss.str().c_str());
+
+         nbFrames = 0;
+         lastTime = currentTime;
+     }
+}
+
 static void error_callback(int error, const char* description)
 {
     fprintf(stderr, "Error: %s\n", description);
@@ -72,24 +100,35 @@ static void error_callback(int error, const char* description)
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
+        glfwSetWindowShouldClose(window, GLFW_TRUE); // TODO: Check why this does not work
+}
+
+static float zoom = 1.0f;
+
+static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    if (yoffset > 0)
+        zoom /= 1.2f;
+    else if (yoffset < 0)
+        zoom *= 1.2f;
+
+    printf("zoom=%f\n", zoom);
 }
 
 int main(int argc, char* argv[])
 {
     GLFWwindow* window;
-    GLuint vertex_buffer, program;
-    GLint mvp_location, vpos_location, vcol_location;
+    GLuint va, vb, ib, program;
 
     glfwSetErrorCallback(error_callback);
 
     if (!glfwInit())
         exit(EXIT_FAILURE);
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
-    window = glfwCreateWindow(640, 480, argv[0], NULL, NULL);
+    window = glfwCreateWindow(640, 480, "Fract", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -97,54 +136,102 @@ int main(int argc, char* argv[])
     }
 
     glfwSetKeyCallback(window, key_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
     glfwMakeContextCurrent(window);
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
 
     program = createProgram();
 
-    glGenBuffers(1, &vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+    glGenVertexArrays(1, &va);
+    glBindVertexArray(va);
+
+    float vertices[4][2] =
+    {
+        {  1.0f, -1.0f },
+        { -1.0f, -1.0f },
+        { -1.0f,  1.0f },
+        {  1.0f,  1.0f }
+    };
+    glGenBuffers(1, &vb);
+    glBindBuffer(GL_ARRAY_BUFFER, vb);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, (void*) 0);
 
-    mvp_location = glGetUniformLocation(program, "MVP");
-    vpos_location = glGetAttribLocation(program, "vPos");
-    vcol_location = glGetAttribLocation(program, "vCol");
+    uint32_t indices[6] = {0, 1, 2, 2, 3, 0};
+    glGenBuffers(1, &ib);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glEnableVertexAttribArray(vpos_location);
-    glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (void*) 0);
+    GLint startLocation = glGetUniformLocation(program, "start");
+    GLint resLocation = glGetUniformLocation(program, "res");
+    GLint nLocation = glGetUniformLocation(program, "n");
 
-    glEnableVertexAttribArray(vcol_location);
-    glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (void*) (sizeof(float) * 2));
+    // TODO: Do massive clean up
 
     while (!glfwWindowShouldClose(window))
     {
-        float ratio;
-        int width, height;
-        mat4x4 m, p, mvp;
+        glfwPollEvents();
 
+        showFPS(window);
+
+        int width, height;
         glfwGetFramebufferSize(window, &width, &height);
-        ratio = width / (float) height;
+
+        float baseRes = 2.0f / std::min(width, height);
+        float res = baseRes * zoom;
+
+        // TODO: Change back to pixel coords for higher precision
+        vec2 start = {-width * 0.5f * res, -height * 0.5f * res};
+        static vec2 offset = {0.0f, 0.0f};
+        static bool pressed = false;
+
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+        {
+            double xpos, ypos;
+            glfwGetCursorPos(window, &xpos, &ypos);
+
+            vec2 mousePos = {float(xpos), height - float(ypos)};
+            static vec2 lastMousePos;
+
+            if (pressed)
+            {
+                vec2 delta{};
+                vec2_sub(delta, mousePos, lastMousePos);
+                vec2_scale(delta, delta, res);
+                vec2_sub(offset, offset, delta);
+            } else
+                pressed = true;
+
+            vec2_dup(lastMousePos, mousePos);
+        } else
+            pressed = false;
+
+        vec2_add(start, start, offset);
+
+        float f = std::log10(1 / zoom) / 6.0f;
+        uint32_t n = 50 + uint32_t(f * 1000);
+        printf("zoom=%f, f=%f, n=%d\n", zoom, f, n);
 
         glViewport(0, 0, width, height);
+
         glClear(GL_COLOR_BUFFER_BIT);
 
-        mat4x4_identity(m);
-        mat4x4_rotate_Z(m, m, (float) glfwGetTime());
-        mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-        mat4x4_mul(mvp, p, m);
-
         glUseProgram(program);
-        glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*) mvp);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        glUniform2fv(startLocation, 1, start);
+        glUniform1f(resLocation, res);
+        glUniform1ui(nLocation, n);
+
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
         glfwSwapBuffers(window);
-        glfwPollEvents();
     }
 
     glfwDestroyWindow(window);
-
     glfwTerminate();
-    exit(EXIT_SUCCESS);
+
+    return EXIT_SUCCESS;
 }
