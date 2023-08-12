@@ -1,10 +1,11 @@
-# Fract
+# Fract - Double
 
-![Fract](https://github.com/erikrl2/Fract/assets/92889691/95ec4cb7-fae3-45e9-a9de-050293c1520b)
+![Fract](https://github.com/erikrl2/Fract/assets/92889691/dddd6d3a-08f8-4f7f-9e35-62d74d983c06)
 
-OpenGL application for zooming Tricorn and Mandelbrot fractals.
 
-Zoom is limited by floating point precision.
+Branch of fractal zoom app using double precision floating point numbers causing poor performance.
+
+Zoom until a step size of 1E-14 per pixel. 
 
 ## Controls
 
