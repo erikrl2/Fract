@@ -1,15 +1,16 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <linmath.h>
 
 #include <string>
 #include <sstream>
 #include <fstream>
 #include <vector>
-#include <algorithm>
 #include <iostream>
+#include <cmath>
+#include <algorithm>
 
 #include "shaders.h"
+#include "util.hpp"
 
 #define APP_NAME "Fract"
 
@@ -88,8 +89,9 @@ int main(int argc, char* argv[])
     if (!glfwInit())
         exit(EXIT_FAILURE);
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow* window = glfwCreateWindow(640, 480, APP_NAME, NULL, NULL);
     if (!window)
@@ -100,19 +102,20 @@ int main(int argc, char* argv[])
 
     glfwSetWindowSizeLimits(window, 200, 100, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
-    static float zoom = 1.0f;
+    static double zoom = 1.0;
     static bool fractToggle = false;
 
     glfwSetScrollCallback(window, [](GLFWwindow* w, double xoffset, double yoffset) {
         if (yoffset > 0)
-            zoom /= 1.2f;
+            zoom /= 1.2;
         else if (yoffset < 0)
-            zoom *= 1.2f;
+            zoom *= 1.2;
     });
     glfwSetMouseButtonCallback(window, [](GLFWwindow* w, int button, int action, int mods) {
         if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
             fractToggle = !fractToggle;
     });
+    static uint32_t n = 50;
     glfwSetKeyCallback(window, [](GLFWwindow* w, int key, int scancode, int action, int mods) {
         if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
             fractToggle = !fractToggle;
@@ -122,12 +125,12 @@ int main(int argc, char* argv[])
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
     glfwSwapInterval(0); // Vsync off
 
-    GLuint program, va, vb, ib;
+    GLuint program, vao, vbo, ibo;
 
     program = createProgram();
 
-    glGenVertexArrays(1, &va);
-    glBindVertexArray(va);
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
 
     float vertices[4][2] =
     {
@@ -136,15 +139,15 @@ int main(int argc, char* argv[])
         { -1.0f,  1.0f },
         {  1.0f,  1.0f }
     };
-    glGenBuffers(1, &vb);
-    glBindBuffer(GL_ARRAY_BUFFER, vb);
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, (void*) 0);
 
     uint32_t indices[6] = {0, 1, 2, 2, 3, 0};
-    glGenBuffers(1, &ib);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
+    glGenBuffers(1, &ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     GLint startLocation = glGetUniformLocation(program, "start");
@@ -160,59 +163,56 @@ int main(int argc, char* argv[])
 
         static double lastT = 0.0;
         double t = glfwGetTime();
-        float dt = float(t - lastT);
+        double dt = t - lastT;
         lastT = t;
 
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
 
-        static vec2 startOffset = {0.0f, 0.0f};
+        using namespace Fract;
 
-        float baseRes = 2.0f / std::min(width, height);
-        float res = baseRes * zoom;
+        static Vec2<double> startOffset = {0.0, 0.0};
+
+        double res = 2.0 / std::min(width, height) * zoom;
 
         if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-            zoom /= 1.0f + dt;
+            zoom /= 1.0 + dt;
         else if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-            zoom *= 1.0f + dt;
+            zoom *= 1.0 + dt;
 
-        float offset = 500.0f * res * dt;
+        double offset = 500 * res * dt;
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-            startOffset[1] += offset;
+            startOffset.y += offset;
         else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            startOffset[1] -= offset;
+            startOffset.y -= offset;
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            startOffset[0] -= offset;
+            startOffset.x -= offset;
         else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-            startOffset[0] += offset;
+            startOffset.x += offset;
 
         static bool pressed = false;
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
         {
-            double xpos, ypos;
-            glfwGetCursorPos(window, &xpos, &ypos);
+            Vec2<double> mousePos;
+            glfwGetCursorPos(window, &mousePos.x, &mousePos.y);
+            mousePos.y = height - mousePos.y;
 
-            vec2 mousePos = {float(xpos), height - float(ypos)};
-            static vec2 lastMousePos;
+            static Vec2<double> lastMousePos;
 
             if (pressed)
-            {
-                vec2 delta{};
-                vec2_sub(delta, mousePos, lastMousePos);
-                vec2_scale(delta, delta, res);
-                vec2_sub(startOffset, startOffset, delta);
-            } else
+                startOffset -= (mousePos - lastMousePos) * res;
+            else
                 pressed = true;
 
-            vec2_dup(lastMousePos, mousePos);
+            lastMousePos = mousePos;
         } else
             pressed = false;
 
-        vec2 start = {-width * 0.5f * res, -height * 0.5f * res};
-        vec2_add(start, start, startOffset);
+        Vec2<double> start{-width * 0.5f * res, -height * 0.5f * res};
+        start += startOffset;
 
-        float f = std::log10(1 / zoom) / 6.0f;
-        uint32_t n = 50 + uint32_t(std::clamp(f, 0.0f, 1.0f) * 1000);
+        double f = std::log10(1 / zoom) / 14.0;
+        uint32_t n = 50 + uint32_t(std::clamp(f, 0.0, 1.0) * 200);
 
         glViewport(0, 0, width, height);
 
@@ -220,8 +220,8 @@ int main(int argc, char* argv[])
 
         glUseProgram(program);
 
-        glUniform2fv(startLocation, 1, start);
-        glUniform1f(resLocation, res);
+        glUniform2dv(startLocation, 1, &start);
+        glUniform1d(resLocation, res);
         glUniform1ui(nLocation, n);
         glUniform1i(mandelbLocation, fractToggle);
 
@@ -230,9 +230,9 @@ int main(int argc, char* argv[])
         glfwSwapBuffers(window);
     }
 
-    glDeleteBuffers(1, &vb);
-    glDeleteBuffers(1, &ib);
-    glDeleteVertexArrays(1, &va);
+    glDeleteBuffers(1, &vbo);
+    glDeleteBuffers(1, &ibo);
+    glDeleteVertexArrays(1, &vao);
     glDeleteProgram(program);
 
     glfwDestroyWindow(window);
