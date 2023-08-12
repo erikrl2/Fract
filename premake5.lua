@@ -25,7 +25,6 @@ workspace "Fract"
 			"src",
 			"vendor/GLFW/include",
 			"vendor/Glad/include",
-			"vendor/linmath.h/include"
 		}
 
 		libdirs

@@ -1,6 +1,5 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <linmath.h>
 
 #include <string>
 #include <sstream>
@@ -8,10 +7,10 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
+#include <cmath>
 
 #include "shaders.h"
-
-#define APP_NAME "Fract"
+#include "util.h"
 
 static GLuint createShader(GLenum type, const char* shaderSrc)
 {
@@ -57,28 +56,6 @@ static GLuint createProgram()
     return program;
 }
 
-static void updateWindowTitle(GLFWwindow *window)
-{
-    static double lastTime = 0.0;
-    static size_t nbFrames = 0;
-
-    double currentTime = glfwGetTime();
-    double delta = currentTime - lastTime;
-    nbFrames++;
-    if (delta >= 1.0)
-    {
-        double fps = double(nbFrames) / delta;
-
-        std::stringstream ss;
-        ss << APP_NAME << " [" << fps << " FPS]";
-
-        glfwSetWindowTitle(window, ss.str().c_str());
-
-        nbFrames = 0;
-        lastTime = currentTime;
-    }
-}
-
 int main(int argc, char* argv[])
 {
     glfwSetErrorCallback([](int error, const char* description) {
@@ -90,8 +67,9 @@ int main(int argc, char* argv[])
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(640, 480, APP_NAME, NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(640, 480, "Fract", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -120,7 +98,7 @@ int main(int argc, char* argv[])
 
     glfwMakeContextCurrent(window);
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-    glfwSwapInterval(0); // Vsync off
+    glfwSwapInterval(1);
 
     GLuint program, va, vb, ib;
 
@@ -156,8 +134,6 @@ int main(int argc, char* argv[])
     {
         glfwPollEvents();
 
-        updateWindowTitle(window);
-
         static double lastT = 0.0;
         double t = glfwGetTime();
         float dt = float(t - lastT);
@@ -166,10 +142,11 @@ int main(int argc, char* argv[])
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
 
-        static vec2 startOffset = {0.0f, 0.0f};
+        using vec2 = Vec2<float>;
 
-        float baseRes = 2.0f / std::min(width, height);
-        float res = baseRes * zoom;
+        static vec2 startOffset{0.0f, 0.0f};
+
+        float res = 2.0f / std::min(width, height) * zoom;
 
         if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
             zoom /= 1.0f + dt;
@@ -178,13 +155,13 @@ int main(int argc, char* argv[])
 
         float offset = 500.0f * res * dt;
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-            startOffset[1] += offset;
+            startOffset.y += offset;
         else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            startOffset[1] -= offset;
+            startOffset.y -= offset;
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            startOffset[0] -= offset;
+            startOffset.x -= offset;
         else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-            startOffset[0] += offset;
+            startOffset.x += offset;
 
         static bool pressed = false;
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
@@ -192,27 +169,23 @@ int main(int argc, char* argv[])
             double xpos, ypos;
             glfwGetCursorPos(window, &xpos, &ypos);
 
-            vec2 mousePos = {float(xpos), height - float(ypos)};
+            vec2 mousePos{float(xpos), height - float(ypos)};
             static vec2 lastMousePos;
 
             if (pressed)
-            {
-                vec2 delta{};
-                vec2_sub(delta, mousePos, lastMousePos);
-                vec2_scale(delta, delta, res);
-                vec2_sub(startOffset, startOffset, delta);
-            } else
+                startOffset -= (mousePos - lastMousePos) * res;
+            else
                 pressed = true;
 
-            vec2_dup(lastMousePos, mousePos);
+            lastMousePos = mousePos;
         } else
             pressed = false;
 
-        vec2 start = {-width * 0.5f * res, -height * 0.5f * res};
-        vec2_add(start, start, startOffset);
+        vec2 start{-width * 0.5f * res, -height * 0.5f * res};
+        start += startOffset;
 
-        float f = std::log10(1 / zoom) / 6.0f;
-        uint32_t n = 50 + uint32_t(std::clamp(f, 0.0f, 1.0f) * 1000);
+        float f = std::log10(1 / zoom) / 7.0f;
+        uint32_t n = 50 + uint32_t(std::clamp(f, 0.0f, 1.0f) * 150);
 
         glViewport(0, 0, width, height);
 
@@ -220,7 +193,7 @@ int main(int argc, char* argv[])
 
         glUseProgram(program);
 
-        glUniform2fv(startLocation, 1, start);
+        glUniform2fv(startLocation, 1, &start);
         glUniform1f(resLocation, res);
         glUniform1ui(nLocation, n);
         glUniform1i(mandelbLocation, fractToggle);
