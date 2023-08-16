@@ -1,6 +1,9 @@
-bin/
-bin-int/
+/bin/
+/bin-int/
 .cache/
 compile_commands.json
 Makefile
 *.make
+.vs/
+*.vcxproj*
+*.sln
