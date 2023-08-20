@@ -1,19 +1,4 @@
-#pragma once
-
-#include <string>
-
-inline std::string vertexShaderSrc = R"(
-#version 330
-
-layout(location = 0) in vec2 pos;
-
-void main()
-{
-    gl_Position = vec4(pos, 0.0, 1.0);
-}
-)";
-
-inline std::string fragmentShaderSrc = R"(
+R"(
 #version 330
 
 uniform vec2 start;
@@ -44,4 +29,4 @@ void main()
 
     gl_FragColor = vec4(col(i * 8.0), col(i * 16.0), col(i * 32.0), 1.0);
 }
-)";
+)"
