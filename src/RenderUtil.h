@@ -4,34 +4,46 @@
 #include <GLFW/glfw3.h>
 
 #include <algorithm>
+#include <vector>
 
-static GLFWwindow* createWindow(const char* title, int width, int height, bool vsync = true)
+struct RenderData {
+	GLuint program, vao, vbo, ibo;
+};
+
+inline void setupDraw(RenderData& d)
 {
-    glfwSetErrorCallback([](int error, const char* description) {
-        fprintf(stderr, "Error: %s\n", description);
-    });
+    glGenVertexArrays(1, &d.vao);
+    glBindVertexArray(d.vao);
 
-    if (!glfwInit())
-        exit(EXIT_FAILURE);
-
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    GLFWwindow* window = glfwCreateWindow(width, height, title, NULL, NULL);
-    if (!window)
+    float vertices[4][2] =
     {
-        glfwTerminate();
-        exit(EXIT_FAILURE);
-    }
+        {  1.0f, -1.0f },
+        { -1.0f, -1.0f },
+        { -1.0f,  1.0f },
+        {  1.0f,  1.0f }
+    };
+    glGenBuffers(1, &d.vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, d.vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, (void*) 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    glfwSetWindowSizeLimits(window, 200, 100, GLFW_DONT_CARE, GLFW_DONT_CARE);
+    uint32_t indices[6] = {0, 1, 2, 2, 3, 0};
+    glGenBuffers(1, &d.ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, d.ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    glfwMakeContextCurrent(window);
-    gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-    glfwSwapInterval(vsync);
+    glBindVertexArray(0);
+}
 
-    return window;
+inline void cleanup(RenderData& d)
+{
+    glDeleteBuffers(1, &d.vbo);
+    glDeleteBuffers(1, &d.ibo);
+    glDeleteVertexArrays(1, &d.vao);
+    glDeleteProgram(d.program);
 }
 
 inline GLuint createShader(GLenum type, const char* shaderSrc)

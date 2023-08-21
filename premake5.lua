@@ -37,6 +37,11 @@ workspace "Fract"
 			"glfw3"
 		}
 
+		defines
+		{
+			"GLFW_INCLUDE_NONE"
+		}
+
 		filter "configurations:Debug"
 			defines "DEBUG"
 			symbols "On"
