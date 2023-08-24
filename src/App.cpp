@@ -1,5 +1,7 @@
 #include "App.h"
 
+#include <ImGui/imgui.h>
+
 #include <algorithm>
 #include <cmath>
 
@@ -7,15 +9,25 @@ namespace Fract {
 
     static FractData fData{};
 
+    static bool imguiWantMouse, imguiWantTextInput;
+
     static void updateStart(float ts);
     static void updateRes(float ts);
     static void updateN();
 
     void Update(float ts)
     {
+		imguiWantMouse = ImGui::GetIO().WantCaptureMouse;
+		imguiWantTextInput = ImGui::GetIO().WantTextInput;
+
         updateRes(ts);
         updateStart(ts);
         updateN();
+    }
+
+    void UpdateImGui(float ts)
+    {
+        ImGui::ShowDemoWindow();
     }
 
     void Draw(const std::unordered_map<std::string, GLint>& uniformLocations)
@@ -33,6 +45,9 @@ namespace Fract {
 
     void OnMouseScroll(double offset)
     {
+        if (imguiWantMouse)
+            return;
+
         if (offset > 0.0)
             fData.zoom /= 1.2f;
         else if (offset < 0.0)
@@ -41,12 +56,18 @@ namespace Fract {
 
     void OnMouseButtonPress(int button)
     {
+        if (imguiWantMouse)
+            return;
+
         if (button == GLFW_MOUSE_BUTTON_RIGHT)
             fData.fractToggle = !fData.fractToggle;
     }
 
     void OnKeyPress(int key)
     {
+        if (imguiWantTextInput)
+            return;
+
         switch (key)
         {
         case GLFW_KEY_ESCAPE:
@@ -65,32 +86,42 @@ namespace Fract {
 
     static void updateRes(float ts)
     {
-        if (glfwGetKey(&window, GLFW_KEY_E) == GLFW_PRESS)
-            fData.zoom /= 1.0f + ts;
-        else if (glfwGetKey(&window, GLFW_KEY_Q) == GLFW_PRESS)
-            fData.zoom *= 1.0f + ts;
+        if (!imguiWantTextInput)
+        {
+            if (glfwGetKey(&window, GLFW_KEY_E) == GLFW_PRESS)
+                fData.zoom /= 1.0f + ts;
+            else if (glfwGetKey(&window, GLFW_KEY_Q) == GLFW_PRESS)
+                fData.zoom *= 1.0f + ts;
+        }
 
-        fData.res = 2.0f / std::min(window.Size.x, window.Size.y) * fData.zoom;
+        fData.res = 2.0f / std::min(window.Size.X, window.Size.Y) * fData.zoom;
     }
 
     static void updateStart(float ts)
     {
         static vec2 startOffset{ 0.0f, 0.0f };
-        float offset = 500.0f * fData.res * ts;
 
-        if (glfwGetKey(&window, GLFW_KEY_W) == GLFW_PRESS)
-            startOffset.y += offset;
-        else if (glfwGetKey(&window, GLFW_KEY_S) == GLFW_PRESS)
-            startOffset.y -= offset;
-        if (glfwGetKey(&window, GLFW_KEY_A) == GLFW_PRESS)
-            startOffset.x -= offset;
-        else if (glfwGetKey(&window, GLFW_KEY_D) == GLFW_PRESS)
-            startOffset.x += offset;
+        if (!imguiWantTextInput)
+        {
+			float offset = 500.0f * fData.res * ts;
+            if (glfwGetKey(&window, GLFW_KEY_W) == GLFW_PRESS)
+                startOffset.Y += offset;
+            else if (glfwGetKey(&window, GLFW_KEY_S) == GLFW_PRESS)
+                startOffset.Y -= offset;
+            if (glfwGetKey(&window, GLFW_KEY_A) == GLFW_PRESS)
+                startOffset.X -= offset;
+            else if (glfwGetKey(&window, GLFW_KEY_D) == GLFW_PRESS)
+                startOffset.X += offset;
+        }
 
-        vec2 mouseDelta = getMousePosDelta(window);
-
-        if (glfwGetMouseButton(&window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-            startOffset -= mouseDelta * fData.res;
+        if (!imguiWantMouse)
+        {
+            vec2 mouseDelta = getMousePosDelta(window);
+            if (glfwGetMouseButton(&window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+            {
+                startOffset -= mouseDelta * fData.res;
+            }
+        }
 
         fData.start = (vec2)window.Size * -0.5f * fData.res + startOffset;
     }

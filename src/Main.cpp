@@ -15,9 +15,11 @@ int main(int argc, char* argv[])
     using namespace Fract;
 
     window.Size = { 640, 480 };
-    window.Handle = createWindow("Fract", window.Size.x, window.Size.y);
+    window.Handle = createWindow("Fract", window.Size.X, window.Size.Y);
 
     setWindowCallbacks();
+
+    setupImGui(&window);
 
     rData.program = createProgram();
 
@@ -37,14 +39,18 @@ int main(int argc, char* argv[])
     {
         glfwPollEvents();
 
-        static double lastT = 0.0;
-        double t = glfwGetTime();
-        float ts = float(t - lastT);
-        lastT = t;
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
 
-        Update(ts);
+        float dt = getDeltaTime();
+        Update(dt);
+        UpdateImGui(dt);
 
         Draw(uniformLocations);
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(&window);
     }
@@ -60,7 +66,7 @@ static void setWindowCallbacks()
     using namespace Fract;
 
     glfwSetScrollCallback(&window, [](GLFWwindow* w, double xoffset, double yoffset) {
-        OnMouseScroll(yoffset);
+		OnMouseScroll(yoffset);
     });
     glfwSetMouseButtonCallback(&window, [](GLFWwindow* w, int button, int action, int mods) {
         if (action == GLFW_PRESS)

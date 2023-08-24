@@ -12,6 +12,8 @@ namespace Fract {
     extern Window window;
 
     void Update(float ts);
+    void UpdateImGui(float ts);
+
     void Draw(const std::unordered_map<std::string, GLint>& uniformLocations);
 
     void OnMouseScroll(double offset);

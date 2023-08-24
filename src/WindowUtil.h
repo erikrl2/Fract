@@ -2,6 +2,9 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <ImGui/imgui.h>
+#include <ImGui/imgui_impl_glfw.h>
+#include <ImGui/imgui_impl_opengl3.h>
 
 #include <iostream>
 
@@ -34,8 +37,33 @@ inline GLFWwindow* createWindow(const char* title, int width, int height, bool v
     return window;
 }
 
+inline void setupImGui(GLFWwindow* window)
+{
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.IniFilename = nullptr;
+
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init();
+}
+
 inline void shutdown(GLFWwindow* window)
 {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
     glfwDestroyWindow(window);
     glfwTerminate();
+}
+
+inline float getDeltaTime()
+{
+    double t = glfwGetTime();
+    static double lastT = t;
+    float dt = float(t - lastT);
+    lastT = t;
+    return dt;
 }

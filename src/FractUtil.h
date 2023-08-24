@@ -1,6 +1,7 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
+#include <ImGui/imgui.h>
 
 #include <cstdint>
 
@@ -9,19 +10,23 @@ namespace Fract {
     template<typename T>
     struct Vec2
     {
-        T x, y;
+        T X, Y;
 
-        Vec2<T> operator+(Vec2<T> other) { return { x + other.x, y + other.y }; }
-        Vec2<T> operator-(Vec2<T> other) { return { x - other.x, y - other.y }; }
-        Vec2<T> operator*(float scalar) { return { x * scalar, y * scalar }; }
+        Vec2() : X(0), Y(0) {}
+        Vec2(T X, T Y) : X(X), Y(Y) {}
+        Vec2(ImVec2 vec2) : X(vec2.x), Y(vec2.y) {}
 
-        Vec2<T>& operator+=(Vec2<T> other) { x += other.x; y += other.y; return *this; }
-        Vec2<T>& operator-=(Vec2<T> other) { x -= other.x; y -= other.y; return *this; }
+        Vec2<T> operator+(Vec2<T> other) { return { X + other.X, Y + other.Y }; }
+        Vec2<T> operator-(Vec2<T> other) { return { X - other.X, Y - other.Y }; }
+        Vec2<T> operator*(float scalar) { return { X * scalar, Y * scalar }; }
 
-        T* operator&() { return &x; }
+        Vec2<T>& operator+=(Vec2<T> other) { X += other.X; Y += other.Y; return *this; }
+        Vec2<T>& operator-=(Vec2<T> other) { X -= other.X; Y -= other.Y; return *this; }
+
+        T* operator&() { return &X; }
 
         template<typename U>
-        operator Vec2<U>() { return { (U)x, (U)y }; }
+        operator Vec2<U>() { return { (U)X, (U)Y }; }
     };
 
     using vec2 = Vec2<float>;
@@ -52,13 +57,13 @@ namespace Fract {
         {
             GLFWmonitor* monitor = glfwGetPrimaryMonitor();
             const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-            glfwGetWindowPos(&window, &pos.x, &pos.y);
-            glfwGetWindowSize(&window, &size.x, &size.y);
+            glfwGetWindowPos(&window, &pos.X, &pos.Y);
+            glfwGetWindowSize(&window, &size.X, &size.Y);
             glfwSetWindowMonitor(&window, monitor, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
         }
         else
         {
-            glfwSetWindowMonitor(&window, NULL, pos.x, pos.y, size.x, size.y, GLFW_DONT_CARE);
+            glfwSetWindowMonitor(&window, NULL, pos.X, pos.Y, size.X, size.Y, GLFW_DONT_CARE);
         }
 
         fullscreen = !fullscreen;
@@ -69,7 +74,7 @@ namespace Fract {
         double xpos, ypos;
         glfwGetCursorPos(&window, &xpos, &ypos);
 
-        vec2 mousePos{ float(xpos), window.Size.y - float(ypos) };
+        vec2 mousePos{ float(xpos), window.Size.Y - float(ypos) };
         static vec2 lastMousePos = mousePos;
 
         vec2 mouseDelta = mousePos - lastMousePos;
