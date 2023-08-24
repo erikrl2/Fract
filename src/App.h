@@ -9,21 +9,13 @@
 
 namespace Fract {
 
-	struct Window
-	{
-		GLFWwindow* handle;
-		ivec2 viewportSize;
+    extern Window window;
 
-		GLFWwindow* operator&() { return handle; }
-	};
+    void Update(float ts);
+    void Draw(const std::unordered_map<std::string, GLint>& uniformLocations);
 
-	extern Window window;
-
-	void Update(float ts);
-	void Draw(const std::unordered_map<std::string, GLint>& uniformLocations);
-
-	void OnMouseScroll(double offset);
-	void OnMouseButtonPress(int button);
-	void OnKeyPress(int key);
+    void OnMouseScroll(double offset);
+    void OnMouseButtonPress(int button);
+    void OnKeyPress(int key);
 
 }

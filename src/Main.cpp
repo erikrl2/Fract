@@ -12,12 +12,10 @@ static void setWindowCallbacks();
 
 int main(int argc, char* argv[])
 {
-	using namespace Fract;
+    using namespace Fract;
 
-    ivec2 windowSize{ 640, 480 };
-
-    window.handle = createWindow("Fract", windowSize.x, windowSize.y);
-    window.viewportSize = windowSize;
+    window.Size = { 640, 480 };
+    window.Handle = createWindow("Fract", window.Size.x, window.Size.y);
 
     setWindowCallbacks();
 
@@ -31,9 +29,9 @@ int main(int argc, char* argv[])
     uniformLocations["n"] = glGetUniformLocation(rData.program, "n");
     uniformLocations["mandelb"] = glGetUniformLocation(rData.program, "mandelb");
 
-	glUseProgram(rData.program);
-	glBindVertexArray(rData.vao);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rData.ibo);
+    glUseProgram(rData.program);
+    glBindVertexArray(rData.vao);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rData.ibo);
 
     while (!glfwWindowShouldClose(&window))
     {
@@ -60,19 +58,22 @@ int main(int argc, char* argv[])
 static void setWindowCallbacks()
 {
     using namespace Fract;
+
     glfwSetScrollCallback(&window, [](GLFWwindow* w, double xoffset, double yoffset) {
         OnMouseScroll(yoffset);
-	});
+    });
     glfwSetMouseButtonCallback(&window, [](GLFWwindow* w, int button, int action, int mods) {
         if (action == GLFW_PRESS)
             OnMouseButtonPress(button);
-	});
+    });
     glfwSetKeyCallback(&window, [](GLFWwindow* w, int key, int scancode, int action, int mods) {
         if (action == GLFW_PRESS)
             OnKeyPress(key);
-	});
+    });
     glfwSetFramebufferSizeCallback(&window, [](GLFWwindow* w, int width, int height) {
         glViewport(0, 0, width, height);
-        window.viewportSize = { width, height };
-	});
+    });
+    glfwSetWindowSizeCallback(&window, [](GLFWwindow* w, int width, int height) {
+        window.Size = { width, height };
+    });
 }
