@@ -17,8 +17,8 @@ namespace Fract {
 
     void Update(float ts)
     {
-		imguiWantMouse = ImGui::GetIO().WantCaptureMouse;
-		imguiWantTextInput = ImGui::GetIO().WantTextInput;
+        imguiWantMouse = ImGui::GetIO().WantCaptureMouse;
+        imguiWantTextInput = ImGui::GetIO().WantTextInput;
 
         updateRes(ts);
         updateStart(ts);
@@ -103,7 +103,7 @@ namespace Fract {
 
         if (!imguiWantTextInput)
         {
-			float offset = 500.0f * fData.res * ts;
+            float offset = 500.0f * fData.res * ts;
             if (glfwGetKey(&window, GLFW_KEY_W) == GLFW_PRESS)
                 startOffset.Y += offset;
             else if (glfwGetKey(&window, GLFW_KEY_S) == GLFW_PRESS)

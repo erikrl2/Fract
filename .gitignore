@@ -1,5 +1,5 @@
-/bin/
-/bin-int/
+/Fract/**/bin/
+/Fract/**/bin-int/
 .cache/
 compile_commands.json
 Makefile

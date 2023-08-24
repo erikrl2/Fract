@@ -73,10 +73,10 @@ inline GLuint createShader(GLenum type, const char* shaderSrc)
 inline GLuint createProgram()
 {
     const char* vertexShaderSrc =
-#include "shader.vert"
+#include "../assets/shaders/shader.vert"
         ;
     const char* fragmentShaderSrc =
-#include "shader.frag"
+#include "../assets/shaders/shader.frag"
         ;
 
     std::vector<GLuint> shaders;

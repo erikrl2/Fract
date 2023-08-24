@@ -66,7 +66,7 @@ static void setWindowCallbacks()
     using namespace Fract;
 
     glfwSetScrollCallback(&window, [](GLFWwindow* w, double xoffset, double yoffset) {
-		OnMouseScroll(yoffset);
+        OnMouseScroll(yoffset);
     });
     glfwSetMouseButtonCallback(&window, [](GLFWwindow* w, int button, int action, int mods) {
         if (action == GLFW_PRESS)
