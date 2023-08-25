@@ -40,17 +40,8 @@ namespace Fract {
         GLFWwindow* operator&() const { return Handle; }
     };
 
-    struct FractData
+    inline void setFullscreen(const Window& window, bool fullscreen = true)
     {
-        vec2 start;
-        uint32_t n;
-        float res, zoom = 1;
-        bool fractToggle = false;
-    };
-
-    inline void toggleFullscreen(const Window& window)
-    {
-        static bool fullscreen = true;
         static ivec2 pos, size;
 
         if (fullscreen)
@@ -65,8 +56,6 @@ namespace Fract {
         {
             glfwSetWindowMonitor(&window, NULL, pos.X, pos.Y, size.X, size.Y, GLFW_DONT_CARE);
         }
-
-        fullscreen = !fullscreen;
     }
 
     inline vec2 getMousePosDelta(const Window& window)
