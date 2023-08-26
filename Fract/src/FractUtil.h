@@ -1,7 +1,7 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
-#include <ImGui/imgui.h>
+#include <imgui/imgui.h>
 
 #include <cstdint>
 

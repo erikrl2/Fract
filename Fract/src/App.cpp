@@ -1,6 +1,6 @@
 #include "App.h"
 
-#include <ImGui/imgui.h>
+#include <imgui/imgui.h>
 
 #include <algorithm>
 #include <cmath>
