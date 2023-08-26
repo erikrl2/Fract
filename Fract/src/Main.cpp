@@ -14,8 +14,9 @@ int main(int argc, char* argv[])
 {
     using namespace Fract;
 
+    window.VSync = true;
     window.Size = { 1280, 720 };
-    window.Handle = createWindow("Fract", window.Size.X, window.Size.Y);
+    window.Handle = createWindow("Fract", window.Size.X, window.Size.Y, window.VSync);
 
     setWindowCallbacks();
 

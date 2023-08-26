@@ -26,7 +26,7 @@ namespace Fract {
         T* operator&() { return &X; }
 
         template<typename U>
-        operator Vec2<U>() { return { (U)X, (U)Y }; }
+        operator Vec2<U>() const { return { (U)X, (U)Y }; }
     };
 
     using vec2 = Vec2<float>;
@@ -36,6 +36,7 @@ namespace Fract {
     {
         GLFWwindow* Handle;
         ivec2 Size;
+        bool VSync;
 
         GLFWwindow* operator&() const { return Handle; }
     };

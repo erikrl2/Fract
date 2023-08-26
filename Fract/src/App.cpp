@@ -1,5 +1,6 @@
 #include "App.h"
 
+#include <GLFW/glfw3.h>
 #include <imgui/imgui.h>
 
 #include <algorithm>
@@ -69,7 +70,13 @@ namespace Fract {
             }
 
             NewLine();
+            Text("%.2f ms (%u FPS)", ts * 1000, (uint32_t) (1 / ts));
 
+            SameLine();
+            if (Checkbox("VSync", &window.VSync))
+                glfwSwapInterval(window.VSync);
+
+            SameLine(300);
             TextDisabled("(?)");
             if (BeginItemTooltip())
             {
