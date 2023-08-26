@@ -1,6 +1,8 @@
 #pragma once
 
 #include "FractUtil.h"
+#include "WindowUtil.h"
+#include "RenderUtil.h"
 
 #include <glad/glad.h>
 
@@ -11,6 +13,7 @@ namespace Fract {
 
     extern Window window;
 
+    void Init();
     void Update(float ts);
     void UpdateImGui(float ts);
 

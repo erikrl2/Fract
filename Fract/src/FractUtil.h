@@ -29,6 +29,16 @@ namespace Fract {
         operator Vec2<U>() const { return { (U)X, (U)Y }; }
     };
 
+    struct Color
+    {
+        float R, G, B;
+
+        Color() : R(0), G(0), B(0) {}
+        Color(float r, float g, float b) : R(r), G(g), B(b) {}
+
+        float* operator&() {return &R; }
+    };
+
     using vec2 = Vec2<float>;
     using ivec2 = Vec2<int>;
 

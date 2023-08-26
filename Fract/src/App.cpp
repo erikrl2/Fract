@@ -8,21 +8,34 @@
 
 namespace Fract {
 
+    enum class Theme { Default, Lerp };
+
     static struct Data
     {
         vec2 Start, StartInternal;
         uint32_t N = 50;
         float Res{}, Zoom = 1;
-        bool Mandelbrot = false;
+
+        Color ClearColor;
+
+        Theme ThemeSelection = Theme::Default;
+        Color LerpColors[2];
 
         bool ShowSettings = true;
         bool Fullscreen = false;
         bool CustomN = false;
+        bool Mandelbrot = false;
     } fData;
 
     static void updateStart(float ts);
     static void updateRes(float ts);
     static void updateN();
+
+    void Init()
+    {
+        fData.LerpColors[0] = { 0, 0, 0 };
+        fData.LerpColors[1] = { 1, 1, 1 };
+    }
 
     void Update(float ts)
     {
@@ -35,67 +48,80 @@ namespace Fract {
     {
         using namespace ImGui;
 
-        if (fData.ShowSettings)
+        if (!fData.ShowSettings)
+            return;
+
+        SetNextWindowPos({});
+        SetNextWindowSize({ 325, 0 });
+
+        Begin("Settings", &fData.ShowSettings, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoNavInputs);
+
+        BeginDisabled(fData.Fullscreen);
+        DragInt2("Window Size", &window.Size, 1, 0, 0, "%d", 0);
+        glfwSetWindowSize(&window, window.Size.X, window.Size.Y);
+        EndDisabled();
+
+        if (Checkbox("Fullscreen", &fData.Fullscreen))
+            setFullscreen(window, fData.Fullscreen);
+
+        DragFloat2("Position", &fData.Start, 2.0f * fData.Res, 0, 0, "%.5f", ImGuiSliderFlags_NoRoundToFormat);
+
+        SliderFloat("Zoom", &fData.Zoom, 0.5f, 3e5f, "", ImGuiSliderFlags_Logarithmic);
+
+        Checkbox("Iteration Limit", &fData.CustomN);
+        SameLine();
+        BeginDisabled(!fData.CustomN);
+        SetNextItemWidth(75);
+        DragInt("##N", (int*)&fData.N, 1, 1, 500, "%d", ImGuiSliderFlags_Logarithmic | ImGuiSliderFlags_NoInput);
+        EndDisabled();
+
+        Checkbox("Mandelbrot", &fData.Mandelbrot);
+
+        ColorEdit3("Clear Color", &fData.ClearColor, ImGuiColorEditFlags_NoInputs);
+
+        Combo("Themes", (int*) &fData.ThemeSelection, "Default\0Lerp");
+
+        if (fData.ThemeSelection == Theme::Lerp)
         {
-            SetNextWindowPos(ImVec2{});
-            SetNextWindowSize(ImVec2{ 325, 0 });
-            Begin("Settings", &fData.ShowSettings, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoNavInputs);
-
-            BeginDisabled(fData.Fullscreen);
-            DragInt2("Window Size", &window.Size, 1, 0, 0, "%d", 0);
-            glfwSetWindowSize(&window, window.Size.X, window.Size.Y);
-            EndDisabled();
-
-            if (Checkbox("Fullscreen", &fData.Fullscreen))
-                setFullscreen(window, fData.Fullscreen);
-
-            DragFloat2("Position", &fData.Start, 2.0f * fData.Res, 0, 0, "%.4f", ImGuiSliderFlags_NoRoundToFormat);
-
-            SliderFloat("Zoom", &fData.Zoom, 0.5f, 3e5f, "", ImGuiSliderFlags_Logarithmic);
-
-            Checkbox("Iteration Limit", &fData.CustomN);
+            ColorEdit3("From", &fData.LerpColors[0], ImGuiColorEditFlags_NoInputs);
             SameLine();
-            BeginDisabled(!fData.CustomN);
-            SetNextItemWidth(75);
-            DragInt("##N", (int*)&fData.N, 1, 1, 500, "%d", ImGuiSliderFlags_Logarithmic | ImGuiSliderFlags_NoInput);
-            EndDisabled();
-
-            Checkbox("Mandelbrot", &fData.Mandelbrot);
-
-            // TODO: Coloring options
-
-            if (Button("Save Image"))
-            {
-                // TODO: Open save dialog
-            }
-
-            NewLine();
-            Text("%.2f ms (%u FPS)", ts * 1000, (uint32_t) (1 / ts));
-
-            SameLine();
-            if (Checkbox("VSync", &window.VSync))
-                glfwSwapInterval(window.VSync);
-
-            SameLine(300);
-            TextDisabled("(?)");
-            if (BeginItemTooltip())
-            {
-                TextUnformatted("Press Space to toggle this window");
-                EndTooltip();
-            }
-
-            End();
+            ColorEdit3("To", &fData.LerpColors[1], ImGuiColorEditFlags_NoInputs);
         }
+
+        if (Button("Save Image"))
+        {
+            // TODO: Open save dialog
+        }
+
+        NewLine();
+        Text("%.2f ms (%u FPS)", ts * 1000, (uint32_t) (1 / ts));
+
+        SameLine();
+        if (Checkbox("VSync", &window.VSync))
+            glfwSwapInterval(window.VSync);
+
+        SameLine(300);
+        TextDisabled("(?)");
+        if (BeginItemTooltip())
+        {
+            TextUnformatted("Press Space to toggle this window");
+            EndTooltip();
+        }
+
+        End();
     }
 
     void Draw(const std::unordered_map<std::string, GLint>& uniformLocations)
     {
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        const Color& cc = fData.ClearColor;
+        glClearColor(cc.R, cc.G, cc.B, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUniform2fv(uniformLocations.at("start"), 1, &fData.StartInternal);
         glUniform1f(uniformLocations.at("res"), fData.Res);
         glUniform1ui(uniformLocations.at("n"), fData.N);
+        glUniform1i(uniformLocations.at("theme"), (int) fData.ThemeSelection);
+        glUniform3fv(uniformLocations.at("colors"), 3, &fData.LerpColors[0]);
         glUniform1i(uniformLocations.at("mandelb"), fData.Mandelbrot);
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);

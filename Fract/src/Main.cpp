@@ -23,18 +23,21 @@ int main(int argc, char* argv[])
     setupImGui(&window);
 
     rData.program = createProgram();
-
     setupDraw(rData);
 
     std::unordered_map<std::string, GLint> uniformLocations;
     uniformLocations["start"] = glGetUniformLocation(rData.program, "start");
     uniformLocations["res"] = glGetUniformLocation(rData.program, "res");
     uniformLocations["n"] = glGetUniformLocation(rData.program, "n");
+    uniformLocations["theme"] = glGetUniformLocation(rData.program, "theme");
+    uniformLocations["colors"] = glGetUniformLocation(rData.program, "colors");
     uniformLocations["mandelb"] = glGetUniformLocation(rData.program, "mandelb");
 
     glUseProgram(rData.program);
     glBindVertexArray(rData.vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rData.ibo);
+
+    Init();
 
     while (!glfwWindowShouldClose(&window))
     {

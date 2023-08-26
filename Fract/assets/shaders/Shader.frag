@@ -5,6 +5,9 @@ uniform vec2 start;
 uniform float res;
 uniform uint n;
 
+uniform int theme;
+uniform vec3 colors[2];
+
 uniform bool mandelb;
 
 float col(float x)
@@ -27,6 +30,22 @@ void main()
         z = vec2(z.x * z.x - z.y * z.y + c.x, v * z.x * z.y + c.y);
     }
 
-    gl_FragColor = vec4(col(i * 8.0), col(i * 16.0), col(i * 32.0), 1.0);
+    vec3 color;
+    switch (theme)
+    {
+        case 0:
+        {
+            color = vec3(col(i * 8.0), col(i * 16.0), col(i * 32.0));
+            break;
+        }
+        case 1:
+        {
+            float t = float(i) / float(n);
+            color = colors[0] + t * (colors[1] - colors[0]);
+            break;
+        }
+    }
+
+    gl_FragColor = vec4(color, 1.0);
 }
 )"
