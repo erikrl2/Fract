@@ -44,6 +44,11 @@ void main()
             color = colors[0] + t * (colors[1] - colors[0]);
             break;
         }
+        default:
+        {
+            color = vec3(0.0, 0.0, 0.0);
+            break;
+        }
     }
 
     gl_FragColor = vec4(color, 1.0);

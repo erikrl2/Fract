@@ -1,8 +1,6 @@
 #pragma once
 
 #include "FractUtil.h"
-#include "WindowUtil.h"
-#include "RenderUtil.h"
 
 #include <glad/glad.h>
 
