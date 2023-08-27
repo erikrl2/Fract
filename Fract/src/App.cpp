@@ -8,7 +8,8 @@
 
 namespace Fract {
 
-    enum class Theme { Default, Lerp };
+    enum class Fractal { Tricorn, Mandelbrot };
+    enum class Theme { Cycle, Lerp, Smooth };
 
     static struct Data
     {
@@ -16,15 +17,19 @@ namespace Fract {
         uint32_t N = 50;
         float Res{}, Zoom = 1;
 
-        Color ClearColor;
+        Fractal FractalSelection = Fractal::Tricorn;
 
-        Theme ThemeSelection = Theme::Default;
+        Theme ThemeSelection = Theme::Cycle;
+        Color ClearColor;
+        Color ThemeColors[2];
+
+        Color CycleColor;
         Color LerpColors[2];
+        Color SmoothColor;
 
         bool ShowSettings = true;
         bool Fullscreen = false;
         bool CustomN = false;
-        bool Mandelbrot = false;
     } fData;
 
     static void updateStart(float ts);
@@ -33,8 +38,12 @@ namespace Fract {
 
     void Init()
     {
+        fData.CycleColor = { 0.03125f, 0.0625f, 0.125f };
+
         fData.LerpColors[0] = { 0, 0, 0 };
         fData.LerpColors[1] = { 1, 1, 1 };
+
+        fData.SmoothColor = { 1, 1, 1 };
     }
 
     void Update(float ts)
@@ -56,13 +65,35 @@ namespace Fract {
 
         Begin("Settings", &fData.ShowSettings, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoNavInputs);
 
+        if (Checkbox("VSync", &window.VSync))
+            glfwSwapInterval(window.VSync);
+
+        SameLine(0, 40);
+        float dtAvg = GetDeltaTimeAverage(ts);
+        Text("%.2f ms (%u FPS)", dtAvg * 1000, (uint32_t) (1 / dtAvg));
+
+        SameLine();
+        SetCursorPos({ 285, 1 });
+        if (SmallButton("Hide"))
+            fData.ShowSettings = false;
+        if (BeginItemTooltip())
+        {
+            TextUnformatted("Toggle with Spacebar");
+            EndTooltip();
+        }
+
         BeginDisabled(fData.Fullscreen);
         DragInt2("Window Size", &window.Size, 1, 0, 0, "%d", 0);
         glfwSetWindowSize(&window, window.Size.X, window.Size.Y);
         EndDisabled();
 
         if (Checkbox("Fullscreen", &fData.Fullscreen))
-            setFullscreen(window, fData.Fullscreen);
+            SetFullscreen(window, fData.Fullscreen);
+
+        SeparatorText("Fractal");
+
+        const char* fractals[] = { "Tricorn", "Mandelbrot" };
+        Combo("Fractal", (int*) & fData.FractalSelection, fractals, sizeof fractals / sizeof fractals[0]);
 
         DragFloat2("Position", &fData.Start, 2.0f * fData.Res, 0, 0, "%.5f", ImGuiSliderFlags_NoRoundToFormat);
 
@@ -75,36 +106,55 @@ namespace Fract {
         DragInt("##N", (int*)&fData.N, 1, 1, 500, "%d", ImGuiSliderFlags_Logarithmic | ImGuiSliderFlags_NoInput);
         EndDisabled();
 
-        Checkbox("Mandelbrot", &fData.Mandelbrot);
+        SeparatorText("Theme");
 
-        ColorEdit3("Clear Color", &fData.ClearColor, ImGuiColorEditFlags_NoInputs);
+        ColorEdit3("Center", &fData.ClearColor);
 
-        Combo("Themes", (int*) &fData.ThemeSelection, "Default\0Lerp");
+        const char* themes[] = { "Cycle", "Lerp", "Smooth" };
+        Combo("Theme", (int*) &fData.ThemeSelection, themes, sizeof themes / sizeof themes[0]);
 
-        if (fData.ThemeSelection == Theme::Lerp)
+        switch (fData.ThemeSelection)
         {
-            ColorEdit3("From", &fData.LerpColors[0], ImGuiColorEditFlags_NoInputs);
-            SameLine();
-            ColorEdit3("To", &fData.LerpColors[1], ImGuiColorEditFlags_NoInputs);
+        case Theme::Cycle:
+        {
+            ColorEdit3("##Cycle", &fData.CycleColor);
+            fData.ThemeColors[0] = fData.CycleColor;
+            break;
         }
+        case Theme::Lerp:
+        {
+            ColorEdit3("From##Lerp", &fData.LerpColors[0]);
+            ColorEdit3("To##Lerp", &fData.LerpColors[1]);
+            fData.ThemeColors[0] = fData.LerpColors[0];
+            fData.ThemeColors[1] = fData.LerpColors[1];
+            break;
+        }
+        case Theme::Smooth:
+        {
+            ColorEdit3("##Smooth", &fData.SmoothColor);
+            fData.ThemeColors[0] = fData.SmoothColor;
+            break;
+        }
+        default:
+        {
+            fprintf(stderr, "Theme %d not supported", (int) fData.ThemeSelection);
+            break;
+        }
+        }
+
+        SeparatorText("Saving");
 
         if (Button("Save Image"))
         {
             // TODO: Open save dialog
         }
 
-        NewLine();
-        Text("%.2f ms (%u FPS)", ts * 1000, (uint32_t) (1 / ts));
-
-        SameLine();
-        if (Checkbox("VSync", &window.VSync))
-            glfwSwapInterval(window.VSync);
-
         SameLine(300);
         TextDisabled("(?)");
         if (BeginItemTooltip())
         {
-            TextUnformatted("Press Space to toggle this window");
+            static const char* helpText = "Panning:\tW/A/S/D or Mouse drag\nZooming:\tE/Q or Mouse scroll\nFullscreen: F";
+            TextUnformatted(helpText);
             EndTooltip();
         }
 
@@ -121,8 +171,8 @@ namespace Fract {
         glUniform1f(uniformLocations.at("res"), fData.Res);
         glUniform1ui(uniformLocations.at("n"), fData.N);
         glUniform1i(uniformLocations.at("theme"), (int) fData.ThemeSelection);
-        glUniform3fv(uniformLocations.at("colors"), 3, &fData.LerpColors[0]);
-        glUniform1i(uniformLocations.at("mandelb"), fData.Mandelbrot);
+        glUniform3fv(uniformLocations.at("color"), 2, &fData.ThemeColors[0]);
+        glUniform1i(uniformLocations.at("isMandelbrot"), (int) fData.FractalSelection);
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     }
@@ -159,7 +209,7 @@ namespace Fract {
             break;
         case GLFW_KEY_F:
             fData.Fullscreen = !fData.Fullscreen;
-            setFullscreen(window, fData.Fullscreen);
+            SetFullscreen(window, fData.Fullscreen);
             break;
         default:
             break;
@@ -196,7 +246,7 @@ namespace Fract {
 
         if (!ImGui::GetIO().WantCaptureMouse)
         {
-            vec2 mouseDelta = getMousePosDelta(window);
+            vec2 mouseDelta = GetMousePosDelta(window);
             if (glfwGetMouseButton(&window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
             {
                 fData.Start -= mouseDelta * fData.Res;

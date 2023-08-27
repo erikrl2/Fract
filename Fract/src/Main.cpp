@@ -30,8 +30,8 @@ int main(int argc, char* argv[])
     uniformLocations["res"] = glGetUniformLocation(rData.program, "res");
     uniformLocations["n"] = glGetUniformLocation(rData.program, "n");
     uniformLocations["theme"] = glGetUniformLocation(rData.program, "theme");
-    uniformLocations["colors"] = glGetUniformLocation(rData.program, "colors");
-    uniformLocations["mandelb"] = glGetUniformLocation(rData.program, "mandelb");
+    uniformLocations["color"] = glGetUniformLocation(rData.program, "color");
+    uniformLocations["isMandelbrot"] = glGetUniformLocation(rData.program, "isMandelbrot");
 
     glUseProgram(rData.program);
     glBindVertexArray(rData.vao);

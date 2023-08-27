@@ -51,7 +51,7 @@ namespace Fract {
         GLFWwindow* operator&() const { return Handle; }
     };
 
-    inline void setFullscreen(const Window& window, bool fullscreen = true)
+    inline void SetFullscreen(const Window& window, bool fullscreen = true)
     {
         static ivec2 pos, size;
 
@@ -69,7 +69,7 @@ namespace Fract {
         }
     }
 
-    inline vec2 getMousePosDelta(const Window& window)
+    inline vec2 GetMousePosDelta(const Window& window)
     {
         double xpos, ypos;
         glfwGetCursorPos(&window, &xpos, &ypos);
@@ -82,6 +82,20 @@ namespace Fract {
         lastMousePos = mousePos;
 
         return mouseDelta;
+    }
+
+    inline float GetDeltaTimeAverage(float ts)
+    {
+        static int tickindex = 0;
+        static float ticksum = 0.0f;
+        static float ticklist[100]{};
+
+        ticksum -= ticklist[tickindex];
+        ticksum += ts;
+        ticklist[tickindex] = ts;
+        tickindex = (tickindex + 1) % 100;
+
+        return ticksum / 100.0f;
     }
 
 }
