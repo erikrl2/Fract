@@ -22,6 +22,7 @@ namespace Fract {
 
         void SetupImGui();
     public:
+        IVec2 GetFrambufferSize() const;
         float GetDeltaTime() const;
     private:
         GLFWwindow* handle;

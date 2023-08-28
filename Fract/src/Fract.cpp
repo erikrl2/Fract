@@ -5,25 +5,22 @@
 #include "Util.h"
 
 #include <imgui/imgui.h>
+#include <stb/stb_image_write.h>
+#include <nfd/nfd.h>
 
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <iostream>
+#include <filesystem>
 
 namespace Fract {
 
     FractApp::FractApp(const std::string& title, IVec2 size, bool vSync)
-        : window(title, size, vSync)
+        : window(title, size, vSync), rData(), fData()
     {
         glfwSetWindowUserPointer(&window, (void*) this);
-    }
 
-    FractApp::~FractApp()
-    {
-    }
-
-    void FractApp::Init()
-    {
         fData.cycleColor = { 0.03125f, 0.0625f, 0.125f };
         fData.lerpColors[0] = { 0, 0, 0 };
         fData.lerpColors[1] = { 1, 1, 1 };
@@ -39,6 +36,14 @@ namespace Fract {
         glUseProgram(rData.program);
         glBindVertexArray(rData.vao);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rData.ibo);
+
+        glGenFramebuffers(1, &rData.fbo);
+        glGenTextures(1, &rData.texture);
+        glBindTexture(GL_TEXTURE_2D, rData.texture);
+    }
+
+    FractApp::~FractApp()
+    {
     }
 
     void FractApp::Update(float ts)
@@ -78,8 +83,10 @@ namespace Fract {
         }
 
         BeginDisabled(fData.fullscreen);
-        DragInt2("Window Size", &window.size, 1, 0, 0, "%d", 0);
-        glfwSetWindowSize(&window, window.size.x, window.size.y);
+        if (DragInt2("Window Size", &window.size, 1, 0, 0, "%d", 0))
+        {
+            glfwSetWindowSize(&window, window.size.x, window.size.y);
+        }
         EndDisabled();
 
         if (Checkbox("Fullscreen", &fData.fullscreen))
@@ -132,7 +139,7 @@ namespace Fract {
         }
         default:
         {
-            fprintf(stderr, "Theme %d not supported", (int) fData.themeSelection);
+            std::cerr << "Theme not supported" << std::endl;
             break;
         }
         }
@@ -140,9 +147,7 @@ namespace Fract {
         SeparatorText("Saving");
 
         if (Button("Save Image"))
-        {
-            // TODO: Open save dialog
-        }
+            SaveImage();
 
         SameLine(300);
         TextDisabled("(?)");
@@ -206,6 +211,10 @@ namespace Fract {
             fData.fullscreen = !fData.fullscreen;
             SetFullscreen(fData.fullscreen);
             break;
+        case GLFW_KEY_S:
+            if (glfwGetKey(&window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+                SaveImage();
+            break;
         default:
             break;
         }
@@ -257,6 +266,35 @@ namespace Fract {
             fData.maxIterations = 50 + uint32_t(std::clamp(std::log10(fData.zoom) / 7.0f, 0.0f, 1.0f) * 150);
     }
 
+    void FractApp::SaveImage()
+    {
+        IVec2 size = window.GetFrambufferSize();
+        uint8_t* pixels = new uint8_t[size.x * size.y * 4];
+
+        glBindFramebuffer(GL_FRAMEBUFFER, rData.fbo);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rData.texture, 0);
+        Draw();
+        glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        nfdchar_t* savePath = NULL;
+        nfdresult_t result = NFD_SaveDialog("png", NULL, &savePath);
+        if (result == NFD_OKAY)
+        {
+            std::filesystem::path filePath = savePath;
+            if (!filePath.has_extension())
+                filePath += ".png";
+
+            stbi_flip_vertically_on_write(true);
+            stbi_write_png(filePath.string().c_str(), size.x, size.y, 4, pixels, size.x * 4);
+
+            free(savePath);
+        }
+
+        delete[] pixels;
+    }
+
     void FractApp::SetFullscreen(bool fullscreen)
     {
         static IVec2 pos, size;
@@ -274,7 +312,7 @@ namespace Fract {
             glfwSetWindowMonitor(&window, NULL, pos.x, pos.y, size.x, size.y, GLFW_DONT_CARE);
         }
 
-        glfwSwapInterval((int)window.vSync);
+        glfwSwapInterval(window.vSync);
     }
 
     Vec2 FractApp::GetMousePosDelta()

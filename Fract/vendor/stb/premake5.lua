@@ -1,20 +1,19 @@
-project "ImGui"
+project "stb"
     kind "StaticLib"
-    language "C++"
-    cppdialect "C++17"
+    language "C"
+    cdialect "C17"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
     files
     {
-        "src/**.cpp"
+        "src/stb_image_write.c"
     }
 
     includedirs
     {
-        "include/imgui",
-        "../GLFW/include",
+        "include"
     }
 
     filter "configurations:Debug"

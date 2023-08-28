@@ -12,9 +12,8 @@ int main(int argc, char* argv[])
 
     FractApp* app = new FractApp("Fract", { 1280, 720 });
 
-    app->Init();
-
     const Window& window = app->GetWindow();
+
     while (!glfwWindowShouldClose(&window))
     {
         glfwPollEvents();

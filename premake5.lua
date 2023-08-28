@@ -4,8 +4,10 @@ workspace "Fract"
     configurations { "Debug", "Release" }
     outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
-	include "Fract"
+    include "Fract"
 
-	group "Dependencies"
-		include "Fract/vendor/Glad"
-		include "Fract/vendor/ImGui"
+    group "Dependencies"
+        include "Fract/vendor/Glad"
+        include "Fract/vendor/ImGui"
+        include "Fract/vendor/stb"
+        include "Fract/vendor/nfd"

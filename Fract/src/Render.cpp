@@ -1,15 +1,30 @@
 #include "Render.h"
 
-#include <cstdio>
-#include <algorithm>
+#include <iostream>
 #include <vector>
 
 namespace Fract {
 
     RenderData::RenderData()
     {
-        program = CreateProgram();
+        CreateProgram();
+        SetupVertexArray();
+    }
 
+    RenderData::~RenderData()
+    {
+        glDeleteBuffers(1, &vbo);
+        glDeleteBuffers(1, &ibo);
+        glDeleteVertexArrays(1, &vao);
+
+        glDeleteTextures(1, &texture);
+        glDeleteFramebuffers(1, &fbo);
+
+        glDeleteProgram(program);
+    }
+
+    void RenderData::SetupVertexArray()
+    {
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
 
@@ -36,12 +51,31 @@ namespace Fract {
         glBindVertexArray(0);
     }
 
-    RenderData::~RenderData()
+    void RenderData::CreateProgram()
     {
-        glDeleteBuffers(1, &vbo);
-        glDeleteBuffers(1, &ibo);
-        glDeleteVertexArrays(1, &vao);
-        glDeleteProgram(program);
+        const char* vertexShaderSrc =
+#include "../assets/shaders/Shader.vert"
+            ;
+        const char* fragmentShaderSrc =
+#include "../assets/shaders/Shader.frag"
+            ;
+
+        std::vector<GLuint> shaders;
+        shaders.push_back(CreateShader(GL_VERTEX_SHADER, vertexShaderSrc));
+        shaders.push_back(CreateShader(GL_FRAGMENT_SHADER, fragmentShaderSrc));
+
+        program = glCreateProgram();
+
+        for (GLuint shader : shaders)
+            glAttachShader(program, shader);
+
+        glLinkProgram(program);
+
+        for (GLuint shader : shaders)
+            glDetachShader(program, shader);
+
+        for (GLuint shader : shaders)
+            glDeleteShader(shader);
     }
 
     GLuint RenderData::CreateShader(GLenum type, const char* shaderSrc)
@@ -61,38 +95,10 @@ namespace Fract {
             glGetShaderInfoLog(shader, length, &length, &infoLog[0]);
             glDeleteShader(shader);
 
-            fprintf(stderr, "%s\n", infoLog.data());
+            std::cerr << infoLog.data() << std::endl;
         }
 
         return shader;
-    }
-
-    GLuint RenderData::CreateProgram()
-    {
-        const char* vertexShaderSrc =
-#include "../assets/shaders/Shader.vert"
-            ;
-        const char* fragmentShaderSrc =
-#include "../assets/shaders/Shader.frag"
-            ;
-
-        std::vector<GLuint> shaders;
-        shaders.push_back(CreateShader(GL_VERTEX_SHADER, vertexShaderSrc));
-        shaders.push_back(CreateShader(GL_FRAGMENT_SHADER, fragmentShaderSrc));
-
-        GLuint program = glCreateProgram();
-
-        for (GLuint shader : shaders)
-            glAttachShader(program, shader);
-
-        glLinkProgram(program);
-
-        for (GLuint shader : shaders)
-            glDetachShader(program, shader);
-
-        std::for_each(shaders.begin(), shaders.end(), glDeleteShader);
-
-        return program;
     }
 
 }

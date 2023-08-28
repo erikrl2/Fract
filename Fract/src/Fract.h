@@ -35,8 +35,6 @@ namespace Fract {
         FractApp(const std::string& title, IVec2 size, bool vSync = true);
         ~FractApp();
 
-        void Init();
-
         void Update(float ts);
         void UpdateImGui(float ts);
 
@@ -50,6 +48,7 @@ namespace Fract {
         void UpdateRes(float ts);
         void UpdateMaxIt(float ts);
 
+        void SaveImage();
         void SetFullscreen(bool fullscreen = true);
         float GetDeltaTimeAverage(float dt);
         Vec2 GetMousePosDelta();

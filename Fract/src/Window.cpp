@@ -32,8 +32,8 @@ namespace Fract {
     GLFWwindow* Window::CreateWindow(const char* title, int width, int height, bool vsync)
     {
         glfwSetErrorCallback([](int error, const char* description) {
-            fprintf(stderr, "Error: %s\n", description);
-            });
+            std::cerr << "Error: " << description << std::endl;
+        });
 
         if (!glfwInit())
             exit(EXIT_FAILURE);
@@ -63,24 +63,24 @@ namespace Fract {
         glfwSetScrollCallback(handle, [](GLFWwindow* w, double xoffset, double yoffset) {
             FractApp* app = (FractApp*)glfwGetWindowUserPointer(w);
             app->OnMouseScroll(yoffset);
-            });
+        });
         glfwSetMouseButtonCallback(handle, [](GLFWwindow* w, int button, int action, int mods) {
             FractApp* app = (FractApp*)glfwGetWindowUserPointer(w);
             if (action == GLFW_PRESS)
                 app->OnMouseButtonPress(button);
-            });
+        });
         glfwSetKeyCallback(handle, [](GLFWwindow* w, int key, int scancode, int action, int mods) {
             FractApp* app = (FractApp*)glfwGetWindowUserPointer(w);
             if (action == GLFW_PRESS)
                 app->OnKeyPress(key);
-            });
+        });
         glfwSetFramebufferSizeCallback(handle, [](GLFWwindow* w, int width, int height) {
             glViewport(0, 0, width, height);
-            });
+        });
         glfwSetWindowSizeCallback(handle, [](GLFWwindow* w, int width, int height) {
             FractApp* app = (FractApp*)glfwGetWindowUserPointer(w);
             app->SetWindowSize({ width, height });
-            });
+        });
     }
 
     void Window::SetupImGui()
@@ -93,6 +93,13 @@ namespace Fract {
 
         ImGui_ImplGlfw_InitForOpenGL(handle, true);
         ImGui_ImplOpenGL3_Init();
+    }
+
+    IVec2 Window::GetFrambufferSize() const
+    {
+        int width, height;
+        glfwGetFramebufferSize(handle, &width, &height);
+        return IVec2(width, height);
     }
 
     float Window::GetDeltaTime() const

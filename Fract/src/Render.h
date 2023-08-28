@@ -13,13 +13,17 @@ namespace Fract {
     public:
         GLuint program;
         GLuint vao, vbo, ibo;
+        GLuint fbo;
+        GLuint texture;
 
         LocationMap locations;
     public:
         RenderData();
         ~RenderData();
     private:
-        GLuint CreateProgram();
+        void CreateProgram();
+        void SetupVertexArray();
+
         GLuint CreateShader(GLenum type, const char* shaderSrc);
     };
 
