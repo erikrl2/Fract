@@ -1,44 +1,20 @@
-#include "App.h"
-#include "WindowUtil.h"
-#include "RenderUtil.h"
+#include "Window.h"
+#include "Render.h"
+#include "Fract.h"
 
-#include <unordered_map>
-
-Fract::Window Fract::window{};
-
-static RenderData rData{};
-
-static void setWindowCallbacks();
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
 
 int main(int argc, char* argv[])
 {
     using namespace Fract;
 
-    window.VSync = true;
-    window.Size = { 1280, 720 };
-    window.Handle = createWindow("Fract", window.Size.X, window.Size.Y, window.VSync);
+    FractApp* app = new FractApp("Fract", { 1280, 720 });
 
-    setWindowCallbacks();
+    app->Init();
 
-    setupImGui(&window);
-
-    rData.program = createProgram();
-    setupDraw(rData);
-
-    std::unordered_map<std::string, GLint> uniformLocations;
-    uniformLocations["start"] = glGetUniformLocation(rData.program, "start");
-    uniformLocations["res"] = glGetUniformLocation(rData.program, "res");
-    uniformLocations["n"] = glGetUniformLocation(rData.program, "n");
-    uniformLocations["theme"] = glGetUniformLocation(rData.program, "theme");
-    uniformLocations["color"] = glGetUniformLocation(rData.program, "color");
-    uniformLocations["isMandelbrot"] = glGetUniformLocation(rData.program, "isMandelbrot");
-
-    glUseProgram(rData.program);
-    glBindVertexArray(rData.vao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rData.ibo);
-
-    Init();
-
+    const Window& window = app->GetWindow();
     while (!glfwWindowShouldClose(&window))
     {
         glfwPollEvents();
@@ -47,11 +23,11 @@ int main(int argc, char* argv[])
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        float dt = getDeltaTime();
-        Update(dt);
-        UpdateImGui(dt);
+        float dt = window.GetDeltaTime();
+        app->Update(dt);
+        app->UpdateImGui(dt);
 
-        Draw(uniformLocations);
+        app->Draw();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -59,31 +35,7 @@ int main(int argc, char* argv[])
         glfwSwapBuffers(&window);
     }
 
-    cleanup(rData);
-    shutdown(&window);
+    delete app;
 
     return EXIT_SUCCESS;
-}
-
-static void setWindowCallbacks()
-{
-    using namespace Fract;
-
-    glfwSetScrollCallback(&window, [](GLFWwindow* w, double xoffset, double yoffset) {
-        OnMouseScroll(yoffset);
-    });
-    glfwSetMouseButtonCallback(&window, [](GLFWwindow* w, int button, int action, int mods) {
-        if (action == GLFW_PRESS)
-            OnMouseButtonPress(button);
-    });
-    glfwSetKeyCallback(&window, [](GLFWwindow* w, int key, int scancode, int action, int mods) {
-        if (action == GLFW_PRESS)
-            OnKeyPress(key);
-    });
-    glfwSetFramebufferSizeCallback(&window, [](GLFWwindow* w, int width, int height) {
-        glViewport(0, 0, width, height);
-    });
-    glfwSetWindowSizeCallback(&window, [](GLFWwindow* w, int width, int height) {
-        window.Size = { width, height };
-    });
 }

@@ -3,7 +3,7 @@ R"(
 
 uniform vec2 start;
 uniform float res;
-uniform uint n;
+uniform uint maxIt;
 
 uniform int theme;
 uniform vec3 color[2];
@@ -19,7 +19,7 @@ vec3 getColor(float i, float z)
         case 0:
             return vec3(fract(i * color[0].r), fract(i * color[0].g), fract(i * color[0].b));
         case 1:
-            return color[0] + (float(i) / float(n)) * (color[1] - color[0]);
+            return color[0] + (float(i) / float(maxIt)) * (color[1] - color[0]);
         case 2:
             float t = i + 1.0 - log(log2(z));
             return vec3(fract(t * color[0].r), fract(t * color[0].g), fract(t * color[0].b));
@@ -38,7 +38,7 @@ void main()
 
     while (z.x * z.x + z.y * z.y < 4.0)
     {
-        if (i++ >= n)
+        if (i++ >= maxIt)
             discard;
         z = vec2(z.x * z.x - z.y * z.y + c.x, v * z.x * z.y + c.y);
     }
