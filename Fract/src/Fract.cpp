@@ -273,6 +273,8 @@ namespace Fract {
         {
             glfwSetWindowMonitor(&window, NULL, pos.x, pos.y, size.x, size.y, GLFW_DONT_CARE);
         }
+
+        glfwSwapInterval((int)window.vSync);
     }
 
     Vec2 FractApp::GetMousePosDelta()
