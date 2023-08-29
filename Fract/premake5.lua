@@ -18,8 +18,8 @@ project "Fract"
         "vendor/GLFW/include",
         "vendor/Glad/include",
         "vendor/ImGui/include",
-        "vendor/stb/include",
-        "vendor/nfd/include",
+        "vendor/stb_image_write/include",
+        "vendor/NativeFileDialog/include",
     }
 
     libdirs
@@ -29,11 +29,11 @@ project "Fract"
 
     links
     {
-        "Glad",
         "glfw3",
+        "Glad",
         "ImGui",
-        "stb",
-        "nfd",
+        "stb_image_write",
+        "NativeFileDialog",
     }
 
     defines

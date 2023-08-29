@@ -1,20 +1,11 @@
-  project "nfd"
+  project "NativeFileDialog"
     kind "StaticLib"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
-    files
-    {
-        "src/*.h",
-        "src/nfd_common.c",
-        "include/*.h",
-    }
-
-    includedirs
-    {
-        ".",
-    }
+    files { "src/nfd_common.c" }
+    includedirs { "." }
 
     filter "configurations:Debug"
         defines "DEBUG"

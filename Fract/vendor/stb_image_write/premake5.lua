@@ -1,4 +1,4 @@
-project "stb"
+project "stb_image_write"
     kind "StaticLib"
     language "C"
     cdialect "C17"
