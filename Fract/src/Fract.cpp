@@ -61,7 +61,8 @@ namespace Fract {
         SetNextWindowPos({});
         SetNextWindowSize({ 325, 0 });
 
-        Begin("Settings", &fData.showSettings, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoNavInputs);
+        int windowFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollbar;
+        Begin("Settings", &fData.showSettings, windowFlags);
 
         if (Checkbox("VSync", &window.vSync))
             glfwSwapInterval(window.vSync);
@@ -81,10 +82,8 @@ namespace Fract {
         }
 
         BeginDisabled(fData.fullscreen);
-        if (DragInt2("Window Size", &window.size, 1, 0, 0, "%d", 0))
-        {
+        if (DragInt2("Window Size", &window.size, 1, 325, 0, "%d"))
             glfwSetWindowSize(&window, window.size.x, window.size.y);
-        }
         EndDisabled();
 
         if (Checkbox("Fullscreen", &fData.fullscreen))
@@ -138,6 +137,7 @@ namespace Fract {
         default:
         {
             std::cerr << "Theme not supported" << std::endl;
+            assert(false);
             break;
         }
         }

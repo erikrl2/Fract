@@ -49,7 +49,7 @@ namespace Fract {
             exit(EXIT_FAILURE);
         }
 
-        glfwSetWindowSizeLimits(window, 200, 100, GLFW_DONT_CARE, GLFW_DONT_CARE);
+        glfwSetWindowSizeLimits(window, 325, 325, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
         glfwMakeContextCurrent(window);
         gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
