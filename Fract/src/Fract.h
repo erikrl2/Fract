@@ -49,6 +49,9 @@ namespace Fract {
         void UpdateMaxIt(float ts);
 
         void SaveImage();
+        void DrawToBuffer(IVec2 size, uint8_t* pixels);
+        void SetWindowIcon();
+
         void SetFullscreen(bool fullscreen = true);
         float GetDeltaTimeAverage(float dt);
         Vec2 GetMousePosDelta();

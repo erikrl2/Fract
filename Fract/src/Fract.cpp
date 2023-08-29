@@ -38,6 +38,8 @@ namespace Fract {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rData.ibo);
 
         glBindTexture(GL_TEXTURE_2D, rData.texture);
+
+        SetWindowIcon();
     }
 
     FractApp::~FractApp()
@@ -270,21 +272,46 @@ namespace Fract {
         if (NFD_SaveDialog("png", NULL, &savePath) == NFD_OKAY)
         {
             IVec2 size = window.GetFrambufferSize();
-            uint8_t* pixels = new uint8_t[size.x * size.y * 4];
+            uint8_t* pixelBuffer = new uint8_t[size.x * size.y * 4];
 
-            glBindFramebuffer(GL_FRAMEBUFFER, rData.fbo);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rData.texture, 0);
-            Draw();
-            glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            DrawToBuffer(size, pixelBuffer);
 
             stbi_flip_vertically_on_write(true);
-            stbi_write_png(savePath, size.x, size.y, 4, pixels, size.x * 4);
+            stbi_write_png(savePath, size.x, size.y, 4, pixelBuffer, size.x * 4);
 
-            delete[] pixels;
+            delete[] pixelBuffer;
             free(savePath);
         }
+    }
+
+    void FractApp::DrawToBuffer(IVec2 size, uint8_t* pixels)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, rData.fbo);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rData.texture, 0);
+        Draw();
+        glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    void FractApp::SetWindowIcon()
+    {
+        FractData fDataBackup = fData;
+
+        fData.fractalSelection = Fractal::Tricorn;
+        fData.themeSelection = Theme::Smooth;
+        fData.themeColors[0] = { 0.25f, 0.25f, 0.0f };
+        fData.startInternal = { -2, -2 };
+        fData.resolution = 0.125f;
+        fData.maxIterations = 5;
+
+        uint8_t pixelBuffer[4096];
+        GLFWimage image{ 32, 32, pixelBuffer };
+
+        DrawToBuffer({ image.width, image.height }, pixelBuffer);
+        glfwSetWindowIcon(&window, 1, &image);
+
+        fData = fDataBackup;
     }
 
     void FractApp::SetFullscreen(bool fullscreen)
