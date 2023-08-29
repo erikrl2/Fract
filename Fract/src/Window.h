@@ -16,7 +16,7 @@ namespace Fract {
 
         GLFWwindow* operator&() const { return handle; }
     private:
-        GLFWwindow* CreateWindow(const char* title, int width, int height, bool vsync = true);
+        void Window::CreateWindow(const char* title);
 
         void SetWindowCallbacks();
 
@@ -24,9 +24,10 @@ namespace Fract {
     public:
         IVec2 GetFrambufferSize() const;
         float GetDeltaTime() const;
-    private:
-        GLFWwindow* handle;
     public:
+        GLFWwindow* handle;
+        const GLFWvidmode* mode;
+
         IVec2 size;
         bool vSync;
     };

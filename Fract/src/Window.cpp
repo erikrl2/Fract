@@ -13,8 +13,9 @@
 namespace Fract {
 
     Window::Window(const std::string& title, IVec2 size, bool vSync)
-        : handle(CreateWindow(title.c_str(), size.x, size.y, vSync)), size(size), vSync(vSync)
+        : size(size), vSync(vSync)
     {
+        CreateWindow(title.c_str());
         SetWindowCallbacks();
         SetupImGui();
     }
@@ -29,7 +30,7 @@ namespace Fract {
         glfwTerminate();
     }
 
-    GLFWwindow* Window::CreateWindow(const char* title, int width, int height, bool vsync)
+    void Window::CreateWindow(const char* title)
     {
         glfwSetErrorCallback([](int error, const char* description) {
             std::cerr << "Error: " << description << std::endl;
@@ -42,44 +43,41 @@ namespace Fract {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-        GLFWwindow* window = glfwCreateWindow(width, height, title, NULL, NULL);
-        if (!window)
+        glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+
+        handle = glfwCreateWindow(size.x, size.y, title, NULL, NULL);
+        if (!handle)
         {
             glfwTerminate();
             exit(EXIT_FAILURE);
         }
 
-        glfwSetWindowSizeLimits(window, 325, 325, GLFW_DONT_CARE, GLFW_DONT_CARE);
+        mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+        glfwSetWindowSizeLimits(handle, 325, 325, mode->width, mode->height);
 
-        glfwMakeContextCurrent(window);
+        size = GetFrambufferSize();
+
+        glfwMakeContextCurrent(handle);
         gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-        glfwSwapInterval(vsync);
-
-        return window;
+        glfwSwapInterval(vSync);
     }
 
     void Window::SetWindowCallbacks()
     {
         glfwSetScrollCallback(handle, [](GLFWwindow* w, double xoffset, double yoffset) {
-            FractApp* app = (FractApp*)glfwGetWindowUserPointer(w);
-            app->OnMouseScroll(yoffset);
+            ((FractApp*)glfwGetWindowUserPointer(w))->OnMouseScroll(yoffset);
         });
         glfwSetMouseButtonCallback(handle, [](GLFWwindow* w, int button, int action, int mods) {
-            FractApp* app = (FractApp*)glfwGetWindowUserPointer(w);
             if (action == GLFW_PRESS)
-                app->OnMouseButtonPress(button);
+                ((FractApp*)glfwGetWindowUserPointer(w))->OnMouseButtonPress(button);
         });
         glfwSetKeyCallback(handle, [](GLFWwindow* w, int key, int scancode, int action, int mods) {
-            FractApp* app = (FractApp*)glfwGetWindowUserPointer(w);
             if (action == GLFW_PRESS)
-                app->OnKeyPress(key);
+                ((FractApp*)glfwGetWindowUserPointer(w))->OnKeyPress(key);
         });
         glfwSetFramebufferSizeCallback(handle, [](GLFWwindow* w, int width, int height) {
+            ((FractApp*)glfwGetWindowUserPointer(w))->SetWindowSize({ width, height });
             glViewport(0, 0, width, height);
-        });
-        glfwSetWindowSizeCallback(handle, [](GLFWwindow* w, int width, int height) {
-            FractApp* app = (FractApp*)glfwGetWindowUserPointer(w);
-            app->SetWindowSize({ width, height });
         });
     }
 

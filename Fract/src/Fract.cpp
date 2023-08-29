@@ -83,8 +83,14 @@ namespace Fract {
             EndTooltip();
         }
 
-        BeginDisabled(fData.fullscreen);
-        if (DragInt2("Window Size", &window.size, 1, 325, 0, "%d"))
+        int isMaximized = glfwGetWindowAttrib(&window, GLFW_MAXIMIZED);
+        BeginDisabled(fData.fullscreen || isMaximized);
+        SetNextItemWidth(103);
+        if (DragInt("##Width", &window.size.x, 1, 325, window.mode->width, "%Width: %d", ImGuiSliderFlags_AlwaysClamp))
+            glfwSetWindowSize(&window, window.size.x, window.size.y);
+        SameLine(0, 4);
+        SetNextItemWidth(104);
+        if (DragInt("Window Size##Height", &window.size.y, 1, 325, window.mode->height, "Height: %d", ImGuiSliderFlags_AlwaysClamp))
             glfwSetWindowSize(&window, window.size.x, window.size.y);
         EndDisabled();
 
@@ -104,7 +110,7 @@ namespace Fract {
         SameLine();
         BeginDisabled(!fData.customMaxIt);
         SetNextItemWidth(75);
-        DragInt("##maxIterations", (int*)&fData.maxIterations, 1, 1, 500, "%d", ImGuiSliderFlags_Logarithmic | ImGuiSliderFlags_NoInput);
+        DragInt("##maxIterations", (int*)&fData.maxIterations, 1, 1, 500, "%d", ImGuiSliderFlags_Logarithmic | ImGuiSliderFlags_AlwaysClamp);
         EndDisabled();
 
         SeparatorText("Theme");
@@ -153,8 +159,8 @@ namespace Fract {
         TextDisabled("(?)");
         if (BeginItemTooltip())
         {
-            static const char* helpText = "Panning:\tW/A/S/D or Mouse drag\nZooming:\tE/Q or Mouse scroll\nFullscreen: F";
-            TextUnformatted(helpText);
+            Text("%-11s: W/A/S/D or Mouse drag\n%-11s: E/Q or Mouse scroll\n%-11s: F\n%-11s: Ctrl+S\n%-11s: Esc",
+                "Panning", "Zooming", "Fullscreen", "Save", "Quit");
             EndTooltip();
         }
 
@@ -268,20 +274,21 @@ namespace Fract {
 
     void FractApp::SaveImage()
     {
+        IVec2 size = window.size;
+        uint8_t* pixelBuffer = new uint8_t[size.x * size.y * 4];
+
+        DrawToBuffer(size, pixelBuffer);
+
         nfdchar_t* savePath = NULL;
         if (NFD_SaveDialog("png", NULL, &savePath) == NFD_OKAY)
         {
-            IVec2 size = window.GetFrambufferSize();
-            uint8_t* pixelBuffer = new uint8_t[size.x * size.y * 4];
-
-            DrawToBuffer(size, pixelBuffer);
-
             stbi_flip_vertically_on_write(true);
             stbi_write_png(savePath, size.x, size.y, 4, pixelBuffer, size.x * 4);
 
-            delete[] pixelBuffer;
             free(savePath);
         }
+
+        delete[] pixelBuffer;
     }
 
     void FractApp::DrawToBuffer(IVec2 size, uint8_t* pixels)
