@@ -8,12 +8,12 @@
     {
         "src/*.h",
         "src/nfd_common.c",
-        "include/*.h",
+        "src/include/*.h",
     }
 
     includedirs
     {
-        "include/nfd"
+        ".",
     }
 
     filter "configurations:Debug"
@@ -27,6 +27,7 @@
     filter "system:windows"
         language "C++"
         files { "src/nfd_win.cpp" }
+        defines {"UNICODE", "_UNICODE"}
 
     filter {"action:gmake or action:xcode4"}
         buildoptions { "-fno-exceptions" }
@@ -36,7 +37,7 @@
         files { "src/nfd_cocoa.m" }
 
     filter {"system:linux", "options:linux_backend=gtk3"}
-       language "C"
+        language "C"
         files { "src/nfd_gtk.c" }
         buildoptions { "`pkg-config --cflags gtk+-3.0`" }
 
@@ -45,4 +46,4 @@
         files { "src/nfd_zenity.c" }
 
     filter "action:vs*"
-        defines { "_CRT_SECURE_NO_WARNINGS" }      
+        defines { "_CRT_SECURE_NO_WARNINGS" }

@@ -5,8 +5,8 @@
 #include "Util.h"
 
 #include <imgui/imgui.h>
-#include <stb/stb_image_write.h>
-#include <nfd/nfd.h>
+#include <stb_image_write.h>
+#include <nfd.h>
 
 #include <algorithm>
 #include <cmath>
@@ -282,12 +282,8 @@ namespace Fract {
         nfdresult_t result = NFD_SaveDialog("png", NULL, &savePath);
         if (result == NFD_OKAY)
         {
-            std::filesystem::path filePath = savePath;
-            if (!filePath.has_extension())
-                filePath += ".png";
-
             stbi_flip_vertically_on_write(true);
-            stbi_write_png(filePath.string().c_str(), size.x, size.y, 4, pixels, size.x * 4);
+            stbi_write_png(savePath, size.x, size.y, 4, pixels, size.x * 4);
 
             free(savePath);
         }
