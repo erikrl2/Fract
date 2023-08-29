@@ -9,6 +9,9 @@ namespace Fract {
     {
         CreateProgram();
         SetupVertexArray();
+
+        glGenFramebuffers(1, &fbo);
+        glGenTextures(1, &texture);
     }
 
     RenderData::~RenderData()

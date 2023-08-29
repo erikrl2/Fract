@@ -37,8 +37,6 @@ namespace Fract {
         glBindVertexArray(rData.vao);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rData.ibo);
 
-        glGenFramebuffers(1, &rData.fbo);
-        glGenTextures(1, &rData.texture);
         glBindTexture(GL_TEXTURE_2D, rData.texture);
     }
 
@@ -268,27 +266,25 @@ namespace Fract {
 
     void FractApp::SaveImage()
     {
-        IVec2 size = window.GetFrambufferSize();
-        uint8_t* pixels = new uint8_t[size.x * size.y * 4];
-
-        glBindFramebuffer(GL_FRAMEBUFFER, rData.fbo);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rData.texture, 0);
-        Draw();
-        glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
         nfdchar_t* savePath = NULL;
-        nfdresult_t result = NFD_SaveDialog("png", NULL, &savePath);
-        if (result == NFD_OKAY)
+        if (NFD_SaveDialog("png", NULL, &savePath) == NFD_OKAY)
         {
+            IVec2 size = window.GetFrambufferSize();
+            uint8_t* pixels = new uint8_t[size.x * size.y * 4];
+
+            glBindFramebuffer(GL_FRAMEBUFFER, rData.fbo);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rData.texture, 0);
+            Draw();
+            glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
             stbi_flip_vertically_on_write(true);
             stbi_write_png(savePath, size.x, size.y, 4, pixels, size.x * 4);
 
+            delete[] pixels;
             free(savePath);
         }
-
-        delete[] pixels;
     }
 
     void FractApp::SetFullscreen(bool fullscreen)
