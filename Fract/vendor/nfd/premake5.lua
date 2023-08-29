@@ -8,7 +8,7 @@
     {
         "src/*.h",
         "src/nfd_common.c",
-        "src/include/*.h",
+        "include/*.h",
     }
 
     includedirs
