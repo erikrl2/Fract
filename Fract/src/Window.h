@@ -16,7 +16,7 @@ namespace Fract {
 
         GLFWwindow* operator&() const { return handle; }
     private:
-        void Window::CreateWindow(const char* title);
+        void CreateWindow(const char* title);
 
         void SetWindowCallbacks();
 
