@@ -90,7 +90,7 @@ namespace Fract {
             glfwSetWindowSize(&window, window.size.x, window.size.y);
         SameLine(0, 4);
         SetNextItemWidth(104);
-        if (DragInt("Window Size##Height", &window.size.y, 1, 325, window.mode->height, "Height: %d", ImGuiSliderFlags_AlwaysClamp))
+        if (DragInt("Frame Size##Height", &window.size.y, 1, 325, window.mode->height, "Height: %d", ImGuiSliderFlags_AlwaysClamp))
             glfwSetWindowSize(&window, window.size.x, window.size.y);
         EndDisabled();
 
