@@ -1,7 +1,5 @@
 #pragma once
 
-struct ImVec2;
-
 namespace Fract {
 
     template<typename T>
@@ -11,7 +9,6 @@ namespace Fract {
 
         Vector2() : x(0), y(0) {}
         Vector2(T x, T y) : x(x), y(y) {}
-        Vector2(ImVec2 vec2) : x(vec2.x), y(vec2.y) {}
 
         Vector2<T> operator+(Vector2<T> other) const { return { x + other.x, y + other.y }; }
         Vector2<T> operator-(Vector2<T> other) const { return { x - other.x, y - other.y }; }

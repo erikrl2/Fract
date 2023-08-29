@@ -41,6 +41,9 @@ project "Fract"
         "GLFW_INCLUDE_NONE",
     }
 
+    filter {"system:linux"}
+        linkoptions {"`pkg-config --libs gtk+-3.0`"}
+
     filter "configurations:Debug"
         defines "DEBUG"
         symbols "On"
