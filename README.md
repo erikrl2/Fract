@@ -1,22 +1,36 @@
 # Fract
 
-![Fract](https://github.com/erikrl2/Fract/assets/92889691/95ec4cb7-fae3-45e9-a9de-050293c1520b)
+Fractal theming application that can be used to create wallpapers.
 
-OpenGL application for zooming Tricorn and Mandelbrot fractals.
+Currently supporting Mandelbrot and Tricorn fractal with 3 different coloring methods.
 
-Zoom is limited by floating point precision.
+Builds and runs on Windows and Linux.
 
 ## Controls
 
-| Functionality    | Key/Mouse binding     |
-| ---------------- | --------------------- |
-| Panning          | W/A/S/D or Mouse drag |
-| Zooming          | E/Q or Mouse scroll   |
-| Toggle fractals  | SPACE or Right click  |
+| Functionality     | Key/Mouse binding     |
+| ----------------- | --------------------- |
+| Panning           | W/A/S/D or Mouse drag |
+| Zooming           | E/Q or Mouse scroll   |
+| Toggle fullscreen | F                     |
+| Toggle settings   | Space                 |
+| Save image        | Ctrl + S              |
+| Close             | Esc                   |
 
 ## Getting started
 
-- Clone repo and run `./premake` to generate Makefile
-- Build project using `make config=release`
+**Download** latest binary from [Release page](https://github.com/erikrl2/Fract/releases) or build by yourself.
 
-Or adjust the script to use a different generator.
+### Build on Linux
+
+- Run `scripts/gen-proj-linux.sh`
+- Run `make config=release`
+
+### Build on Windows
+
+- Run `scripts/gen-proj-win.bat`
+- Open `Fract.sln` with Visual Studio 2022
+
+## Demo Video
+
+https://github.com/erikrl2/Fract/assets/92889691/81755a95-2f8b-4a96-bc48-046ddb148639
