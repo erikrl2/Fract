@@ -86,7 +86,7 @@ namespace Fract {
         int isMaximized = glfwGetWindowAttrib(&window, GLFW_MAXIMIZED);
         BeginDisabled(fData.fullscreen || isMaximized);
         SetNextItemWidth(103);
-        if (DragInt("##Width", &window.size.x, 1, 325, window.mode->width, "%Width: %d", ImGuiSliderFlags_AlwaysClamp))
+        if (DragInt("##Width", &window.size.x, 1, 325, window.mode->width, "Width: %d", ImGuiSliderFlags_AlwaysClamp))
             glfwSetWindowSize(&window, window.size.x, window.size.y);
         SameLine(0, 4);
         SetNextItemWidth(104);
