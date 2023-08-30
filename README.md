@@ -6,17 +6,6 @@ Currently supporting Mandelbrot and Tricorn fractal with 3 different coloring me
 
 Builds and runs on Windows and Linux.
 
-## Controls
-
-| Functionality     | Key/Mouse binding     |
-| ----------------- | --------------------- |
-| Panning           | W/A/S/D or Mouse drag |
-| Zooming           | E/Q or Mouse scroll   |
-| Toggle fullscreen | F                     |
-| Toggle settings   | Space                 |
-| Save image        | Ctrl + S              |
-| Close             | Esc                   |
-
 ## Getting started
 
 **Download** latest binary from [Release page](https://github.com/erikrl2/Fract/releases) or build by yourself.
@@ -34,3 +23,18 @@ Builds and runs on Windows and Linux.
 ## Demo Video
 
 https://github.com/erikrl2/Fract/assets/92889691/81755a95-2f8b-4a96-bc48-046ddb148639
+
+### Controls
+
+| Functionality     | Key/Mouse binding     |
+| ----------------- | --------------------- |
+| Panning           | W/A/S/D or Mouse drag |
+| Zooming           | E/Q or Mouse scroll   |
+| Toggle fullscreen | F                     |
+| Toggle settings   | Space                 |
+| Save image        | Ctrl + S              |
+| Close             | Esc                   |
+
+## Wallpaper Examples
+
+![Fractal-Wallpapers](https://github.com/erikrl2/Fract/assets/92889691/d4c72b1e-eda8-4b87-b6f4-4eed3d27633e)
